@@ -10,33 +10,73 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as HistoryRouteImport } from './routes/history'
+import { Route as StatsRouteImport } from './routes/stats'
+import { Route as HabitsIndexRouteImport } from './routes/habits.index'
+import { Route as HabitsIdRouteImport } from './routes/habits.$id'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const HistoryRoute = HistoryRouteImport.update({
+  id: '/history',
+  path: '/history',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const StatsRoute = StatsRouteImport.update({
+  id: '/stats',
+  path: '/stats',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const HabitsIndexRoute = HabitsIndexRouteImport.update({
+  id: '/habits/',
+  path: '/habits/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const HabitsIdRoute = HabitsIdRouteImport.update({
+  id: '/habits/$id',
+  path: '/habits/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/history': typeof HistoryRoute
+  '/stats': typeof StatsRoute
+  '/habits/$id': typeof HabitsIdRoute
+  '/habits/': typeof HabitsIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/history': typeof HistoryRoute
+  '/stats': typeof StatsRoute
+  '/habits/$id': typeof HabitsIdRoute
+  '/habits': typeof HabitsIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/history': typeof HistoryRoute
+  '/stats': typeof StatsRoute
+  '/habits/$id': typeof HabitsIdRoute
+  '/habits/': typeof HabitsIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths: '/' | '/history' | '/stats' | '/habits/$id' | '/habits/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to: '/' | '/history' | '/stats' | '/habits/$id' | '/habits'
+  id: '__root__' | '/' | '/history' | '/stats' | '/habits/$id' | '/habits/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  HistoryRoute: typeof HistoryRoute
+  StatsRoute: typeof StatsRoute
+  HabitsIdRoute: typeof HabitsIdRoute
+  HabitsIndexRoute: typeof HabitsIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -48,11 +88,43 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/history': {
+      id: '/history'
+      path: '/history'
+      fullPath: '/history'
+      preLoaderRoute: typeof HistoryRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/stats': {
+      id: '/stats'
+      path: '/stats'
+      fullPath: '/stats'
+      preLoaderRoute: typeof StatsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/habits/': {
+      id: '/habits/'
+      path: '/habits'
+      fullPath: '/habits/'
+      preLoaderRoute: typeof HabitsIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/habits/$id': {
+      id: '/habits/$id'
+      path: '/habits/$id'
+      fullPath: '/habits/$id'
+      preLoaderRoute: typeof HabitsIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  HistoryRoute: HistoryRoute,
+  StatsRoute: StatsRoute,
+  HabitsIdRoute: HabitsIdRoute,
+  HabitsIndexRoute: HabitsIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
