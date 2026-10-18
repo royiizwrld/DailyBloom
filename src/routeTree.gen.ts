@@ -12,6 +12,8 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as HistoryRouteImport } from './routes/history'
 import { Route as StatsRouteImport } from './routes/stats'
+import { Route as ApiBulkParseRouteImport } from './routes/api/bulk-parse'
+import { Route as ApiCoachRouteImport } from './routes/api/coach'
 import { Route as HabitsIndexRouteImport } from './routes/habits.index'
 import { Route as HabitsIdRouteImport } from './routes/habits.$id'
 
@@ -30,6 +32,16 @@ const StatsRoute = StatsRouteImport.update({
   path: '/stats',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiBulkParseRoute = ApiBulkParseRouteImport.update({
+  id: '/api/bulk-parse',
+  path: '/api/bulk-parse',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiCoachRoute = ApiCoachRouteImport.update({
+  id: '/api/coach',
+  path: '/api/coach',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const HabitsIndexRoute = HabitsIndexRouteImport.update({
   id: '/habits/',
   path: '/habits/',
@@ -45,6 +57,8 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/history': typeof HistoryRoute
   '/stats': typeof StatsRoute
+  '/api/bulk-parse': typeof ApiBulkParseRoute
+  '/api/coach': typeof ApiCoachRoute
   '/habits/$id': typeof HabitsIdRoute
   '/habits/': typeof HabitsIndexRoute
 }
@@ -52,6 +66,8 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/history': typeof HistoryRoute
   '/stats': typeof StatsRoute
+  '/api/bulk-parse': typeof ApiBulkParseRoute
+  '/api/coach': typeof ApiCoachRoute
   '/habits/$id': typeof HabitsIdRoute
   '/habits': typeof HabitsIndexRoute
 }
@@ -60,21 +76,47 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/history': typeof HistoryRoute
   '/stats': typeof StatsRoute
+  '/api/bulk-parse': typeof ApiBulkParseRoute
+  '/api/coach': typeof ApiCoachRoute
   '/habits/$id': typeof HabitsIdRoute
   '/habits/': typeof HabitsIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/history' | '/stats' | '/habits/$id' | '/habits/'
+  fullPaths:
+    | '/'
+    | '/history'
+    | '/stats'
+    | '/api/bulk-parse'
+    | '/api/coach'
+    | '/habits/$id'
+    | '/habits/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/history' | '/stats' | '/habits/$id' | '/habits'
-  id: '__root__' | '/' | '/history' | '/stats' | '/habits/$id' | '/habits/'
+  to:
+    | '/'
+    | '/history'
+    | '/stats'
+    | '/api/bulk-parse'
+    | '/api/coach'
+    | '/habits/$id'
+    | '/habits'
+  id:
+    | '__root__'
+    | '/'
+    | '/history'
+    | '/stats'
+    | '/api/bulk-parse'
+    | '/api/coach'
+    | '/habits/$id'
+    | '/habits/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   HistoryRoute: typeof HistoryRoute
   StatsRoute: typeof StatsRoute
+  ApiBulkParseRoute: typeof ApiBulkParseRoute
+  ApiCoachRoute: typeof ApiCoachRoute
   HabitsIdRoute: typeof HabitsIdRoute
   HabitsIndexRoute: typeof HabitsIndexRoute
 }
@@ -102,6 +144,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof StatsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/bulk-parse': {
+      id: '/api/bulk-parse'
+      path: '/api/bulk-parse'
+      fullPath: '/api/bulk-parse'
+      preLoaderRoute: typeof ApiBulkParseRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/coach': {
+      id: '/api/coach'
+      path: '/api/coach'
+      fullPath: '/api/coach'
+      preLoaderRoute: typeof ApiCoachRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/habits/': {
       id: '/habits/'
       path: '/habits'
@@ -123,6 +179,8 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   HistoryRoute: HistoryRoute,
   StatsRoute: StatsRoute,
+  ApiBulkParseRoute: ApiBulkParseRoute,
+  ApiCoachRoute: ApiCoachRoute,
   HabitsIdRoute: HabitsIdRoute,
   HabitsIndexRoute: HabitsIndexRoute,
 }
