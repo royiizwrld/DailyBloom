@@ -51,7 +51,7 @@ function Today() {
   const groups = useMemo(() => {
     const defs =
       groupBy === "routine"
-        ? X((a, b) => a.order - b.order).map((r) => ({ id: r.id as string | null, name: r.name })), { id: null, name: "Anytime" }]
+        ? [...[...routines].sort((a, b) => a.order - b.order).map((r) => ({ id: r.id as string | null, name: r.name })), { id: null, name: "Anytime" }]
         : categories.map((c) => ({ id: c.id as string | null, name: c.name }));
     return defs
       .map((g) => ({ ...g, items: shown.filter((h: Habit) => (groupBy === "routine" ? h.routineId === g.id : h.categoryId === g.id)) }))
