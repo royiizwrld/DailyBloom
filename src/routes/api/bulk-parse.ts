@@ -29,7 +29,7 @@ export const Route = createFileRoute("/api/bulk-parse")({
           /* handled below */
         }
         if (!text.trim()) return Response.json({ error: "Please describe your routine first." }, { status: 400 });
-        const apiKey = process.env.LOVABLE_API_KEY;
+        const apiKey = process.env['LOVABLE_API_KEY'];
         if (!apiKey) return Response.json({ error: "AI isn't configured yet." }, { status: 500 });
         try {
           const { provider } = createGateway(apiKey);

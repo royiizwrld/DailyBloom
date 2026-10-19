@@ -67,7 +67,7 @@ function HabitDetail() {
         <div className="mb-3 text-sm font-semibold">By weekday (last 8 weeks)</div>
         <div className="grid grid-cols-7 gap-2 text-center text-xs">
           {[1, 2, 3, 4, 5, 6, 0].map((d) => {
-            const r = s.weekdayRates[d];
+            const r = s.weekdayRates[d] ?? null;
             return (
               <div key={d}>
                 <div className="mb-1 flex h-16 items-end justify-center rounded-lg bg-muted">

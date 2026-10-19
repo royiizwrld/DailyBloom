@@ -38,7 +38,7 @@ export function buildSeed(today: Date): HabitData {
     const d = addDays(today, -i);
     for (const h of habits) {
       if (!isScheduledOn(h, d)) continue;
-      let p = skill[h.id];
+      let p = skill[h.id] ?? 0.5;
       if (h.id === "s-gym" && d.getDay() === 5) p = 0.25; // Fridays are hard
       if (rnd() < p) {
         const date = toKey(d);

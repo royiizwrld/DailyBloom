@@ -99,7 +99,7 @@ export function FrequencyEditor({ value, onChange }: { value: Frequency; onChang
 type Draft = Omit<Habit, "id" | "createdAt" | "archived">;
 const blank: Draft = { name: "", icon: "⭐", color: "coral", categoryId: "health", routineId: "morning", frequency: { type: "daily" }, reminder: "" };
 
-export function HabitForm({ open, onOpenChange, habit }: { open: boolean; onOpenChange: (o: boolean) => void; habit?: Habit }) {
+export function HabitForm({ open, onOpenChange, habit }: { open: boolean; onOpenChange: (o: boolean) => void; habit?: Habit | undefined }) {
   const { categories, routines, addHabit, updateHabit, addCategory } = useHabits();
   const [d, setD] = useState<Draft>(blank);
   const [newCat, setNewCat] = useState("");

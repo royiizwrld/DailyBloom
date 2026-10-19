@@ -90,8 +90,8 @@ export function computeStreaks(habit: Habit, c: CompletionMap, today: Date) {
     }
     let current = 0;
     for (let i = weeks.length - 1; i >= 0; i--) {
-      if (weeks[i].met) current++;
-      else if (weeks[i].current) continue; // week still in progress
+      if (weeks[i]!.met) current++;
+      else if (weeks[i]!.current) continue; // week still in progress
       else break;
     }
     return { current, longest, unit: "weeks" as const };
@@ -105,7 +105,7 @@ export function computeStreaks(habit: Habit, c: CompletionMap, today: Date) {
   }
   let current = 0;
   for (let i = days.length - 1; i >= 0; i--) {
-    const k = toKey(days[i]);
+    const k = toKey(days[i]!);
     if (isDone(c, habit.id, k)) current++;
     else if (k === todayKey) continue; // today not done yet doesn't break
     else break;
