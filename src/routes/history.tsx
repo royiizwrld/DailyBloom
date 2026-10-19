@@ -1,19 +1,19 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { eachDayOfInterval, endOfMonth, isAfter, startOfMonth } from "date-fns";
 import { useMemo, useState } from "react";
 import { applyFilters, FilterBar } from "@/components/FilterBar";
 import { PageHeader, StatTile } from "@/components/habit-ui";
 import { Heatmap } from "@/components/Heatmap";
 import { useHabits } from "@/context/HabitsContext";
-import { dayRate } from "@/lib/habit-logic";
+import { dayRate, toKey } from "@/lib/habit-logic";
 import type { Filters } from "@/types/habit";
 
 export const Route = createFileRoute("/history")({
   head: () => ({
     meta: [
-      { title: "History — Daily Habit Tracker" },
+      { title: "History — Daily Bloom" },
       { name: "description", content: "A monthly heatmap of how many of your due habits you completed each day." },
-      { property: "og:title", content: "History — Daily Habit Tracker" },
+      { property: "og:title", content: "History — Daily Bloom" },
       { property: "og:description", content: "A monthly heatmap of how many of your due habits you completed each day." },
     ],
   }),
@@ -22,6 +22,7 @@ export const Route = createFileRoute("/history")({
 
 function History() {
   const { activeHabits, completions, today } = useHabits();
+  const navigate = useNavigate();
   const [month, setMonth] = useState(today);
   const [filters, setFilters] = useState<Filters>({ categoryId: "all", routineId: "all" });
   const habits = applyFilters(activeHabits, filters);
@@ -45,7 +46,8 @@ function History() {
         <StatTile label="Perfect days" value={summary.perfect} />
         <StatTile label="Days tracked" value={summary.tracked} />
       </div>
-      <Heatmap month={month} onMonthChange={setMonth} today={today} valueFor={(d) => dayRate(habits, d, completions)} />
+      <Heatmap month={month} onMonthChange={setMonth} today={today} valueFor={(d) => dayRate(habits, d, completions)} onDayClick={(d) => navigate({ to: "/", search: { date: toKey(d) } })} />
+      <p className="mt-2 text-center text-xs text-muted-foreground">Tap any day to open it.</p>
     </div>
   );
 }

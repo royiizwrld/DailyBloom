@@ -17,9 +17,9 @@ import type { Habit } from "@/types/habit";
 export const Route = createFileRoute("/habits/")({
   head: () => ({
     meta: [
-      { title: "Your habits — Daily Habit Tracker" },
+      { title: "Your habits — Daily Bloom" },
       { name: "description", content: "Create, edit, archive and organise your habits, categories and routines." },
-      { property: "og:title", content: "Your habits — Daily Habit Tracker" },
+      { property: "og:title", content: "Your habits — Daily Bloom" },
       { property: "og:description", content: "Create, edit, archive and organise your habits, categories and routines." },
     ],
   }),

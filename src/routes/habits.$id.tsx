@@ -13,9 +13,9 @@ import { cn } from "@/lib/utils";
 export const Route = createFileRoute("/habits/$id")({
   head: () => ({
     meta: [
-      { title: "Habit details — Daily Habit Tracker" },
+      { title: "Habit details — Daily Bloom" },
       { name: "description", content: "Streaks, 30-day completion rate, calendar and notes for one habit." },
-      { property: "og:title", content: "Habit details — Daily Habit Tracker" },
+      { property: "og:title", content: "Habit details — Daily Bloom" },
       { property: "og:description", content: "Streaks, 30-day completion rate, calendar and notes for one habit." },
     ],
   }),
