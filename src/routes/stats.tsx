@@ -47,7 +47,7 @@ function Stats() {
       w.done += b.done; w.due += b.due;
       weeks.set(wk, w);
     }
-    const weekly = [...weeks.entries()].slice(-12).map(([k, w]) => ({
+    const weekly = [...weeks.entries()].slice(-12).filter(([, w]) => w.due > 0).map(([k, w]) => ({
       week: format(new Date(k + "T00:00"), "MMM d"),
       rate: w.due ? Math.round((w.done / w.due) * 100) : 0,
     }));
