@@ -38,8 +38,7 @@ export function AppShell({ children }: { children: ReactNode }) {
               to={to}
               activeOptions={{ exact: to === "/" }}
               title={collapsed ? label : undefined}
-              className={cn("flex items-center gap-3 rounded-xl px-3", collapsed && "justify-center px-0")}
-              data-x="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground data-[status=active]:bg-sidebar-accent data-[status=active]:text-sidebar-accent-foreground"
+              className={cn("flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground data-[status=active]:bg-sidebar-accent data-[status=active]:text-sidebar-accent-foreground", collapsed && "justify-center px-0")}
             >
               <Icon className="size-5 shrink-0" /> {!collapsed && label}
             </Link>
