@@ -1,6 +1,8 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { addDays, format, isSameDay } from "date-fns";
-import { ChevronLeft, ChevronRight, Plus } from "lucide-react";
+import { CalendarIcon, ChevronLeft, ChevronRight, Plus, RotateCcw } from "lucide-react";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Celebration } from "@/components/Celebration";
 import { applyFilters, FilterBar } from "@/components/FilterBar";
@@ -10,30 +12,36 @@ import { HabitForm } from "@/components/HabitForm";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useHabits } from "@/context/HabitsContext";
-import { dueHabits, isDone, shouldCelebrate, toKey } from "@/lib/habit-logic";
+import { dueHabits, fromKey, isDone, shouldCelebrate, toKey } from "@/lib/habit-logic";
 import type { Filters, Habit } from "@/types/habit";
 
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Today — Daily Habit Tracker" },
+      { title: "Today — Daily Bloom" },
       { name: "description", content: "Check off today's habits, see your progress and keep your streaks alive." },
-      { property: "og:title", content: "Today — Daily Habit Tracker" },
+      { property: "og:title", content: "Today — Daily Bloom" },
       { property: "og:description", content: "Check off today's habits, see your progress and keep your streaks alive." },
     ],
   }),
+  validateSearch: (s: Record<string, unknown>): { date?: string | undefined } =>
+    typeof s.date === "string" && /^\d{4}-\d{2}-\d{2}$/.test(s.date) ? { date: s.date } : {},
   component: Today,
 });
 
 function Today() {
   const { activeHabits, completions, today, loaded, categories, routines, celebrated, markCelebrated } = useHabits();
-  const [date, setDate] = useState(today);
+  const search = Route.useSearch();
+  const navigate = useNavigate({ from: "/" });
+  const [pickerOpen, setPickerOpen] = useState(false);
+  const parsed = search.date ? fromKey(search.date) : today;
+  const date = parsed > today ? today : parsed;
+  const setDate = (d: Date) => navigate({ search: isSameDay(d, today) ? {} : { date: toKey(d) } });
   const [groupBy, setGroupBy] = useState<"routine" | "category">("routine");
   const [filters, setFilters] = useState<Filters>({ categoryId: "all", routineId: "all" });
   const [formOpen, setFormOpen] = useState(false);
   const [celebrate, setCelebrate] = useState(false);
 
-  useEffect(() => setDate(today), [today]);
   const key = toKey(date);
   const isToday = isSameDay(date, today);
   const due = useMemo(() => dueHabits(activeHabits, date, completions), [activeHabits, date, completions]);
@@ -65,9 +73,31 @@ function Today() {
         <Button variant="outline" size="icon" className="size-11 rounded-full" onClick={() => setDate(addDays(date, -1))} aria-label="Previous day">
           <ChevronLeft />
         </Button>
-        <div className="text-center">
+        <div className="flex flex-col items-center text-center">
           <div className="text-xs font-semibold uppercase tracking-widest text-primary">{isToday ? "Today" : format(date, "EEEE")}</div>
-          <h1 className="text-2xl font-bold">{format(date, "MMMM d")}</h1>
+          <Popover open={pickerOpen} onOpenChange={setPickerOpen}>
+            <PopoverTrigger asChild>
+              <button type="button" className="flex items-center gap-2 rounded-xl px-2 py-1 text-2xl font-bold hover:bg-accent" aria-label="Pick a date">
+                {format(date, "MMMM d")}{date.getFullYear() !== today.getFullYear() ? `, ${date.getFullYear()}` : ""}
+                <CalendarIcon className="size-5 text-muted-foreground" />
+              </button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="center">
+              <Calendar
+                mode="single"
+                selected={date}
+                onSelect={(d) => { if (d) { setDate(d); setPickerOpen(false); } }}
+                disabled={(d) => d > today}
+                defaultMonth={date}
+                className="pointer-events-auto p-3"
+              />
+            </PopoverContent>
+          </Popover>
+          {!isToday && (
+            <Button variant="secondary" size="sm" className="mt-1 h-8 rounded-full" onClick={() => setDate(today)}>
+              <RotateCcw className="size-3.5" /> Back to today
+            </Button>
+          )}
         </div>
         <Button
           variant="outline"

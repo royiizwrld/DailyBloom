@@ -9,9 +9,9 @@ import { dueHabits, isDone, toKey, WEEKDAY_SHORT, weekStart } from "@/lib/habit-
 export const Route = createFileRoute("/stats")({
   head: () => ({
     meta: [
-      { title: "Stats — Daily Habit Tracker" },
+      { title: "Stats — Daily Bloom" },
       { name: "description", content: "Weekly completion trends, category rates, best weekdays and a streak leaderboard." },
-      { property: "og:title", content: "Stats — Daily Habit Tracker" },
+      { property: "og:title", content: "Stats — Daily Bloom" },
       { property: "og:description", content: "Weekly completion trends, category rates, best weekdays and a streak leaderboard." },
     ],
   }),
