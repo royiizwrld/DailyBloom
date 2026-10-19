@@ -23,7 +23,7 @@ export function buildCoachSummary(data: HabitData, today: Date) {
       currentStreak: `${s.currentStreak} ${s.streakUnit}`,
       longestStreak: `${s.longestStreak} ${s.streakUnit}`,
       completion30dPct: pct(s.rate30),
-      byWeekdayPct: Object.fromEntries(WEEKDAY_SHORT.map((d, i) => [d, pct(s.weekdayRates[i])])),
+      byWeekdayPct: Object.fromEntries(WEEKDAY_SHORT.map((d, i) => [d, pct(s.weekdayRates[i] ?? null)])),
       recentNotes: notes,
     };
   });

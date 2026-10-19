@@ -59,7 +59,7 @@ function Stats() {
       })
       .filter((c) => c.rate !== null) as { name: string; rate: number }[];
     const wd = Array.from({ length: 7 }, () => ({ done: 0, due: 0 }));
-    for (const b of byDay.slice(-56)) { wd[b.date.getDay()].done += b.done; wd[b.date.getDay()].due += b.due; }
+    for (const b of byDay.slice(-56)) { const w = wd[b.date.getDay()]!; w.done += b.done; w.due += b.due; }
     const wdRates = wd.map((w, i) => ({ day: WEEKDAY_SHORT[i], rate: w.due ? w.done / w.due : null })).filter((w) => w.rate !== null) as { day: string; rate: number }[];
     const sorted = [...wdRates].sort((a, b) => b.rate - a.rate);
     return { weekly, cat, best: sorted[0], worst: sorted[sorted.length - 1] };
