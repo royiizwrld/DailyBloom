@@ -66,7 +66,7 @@ export function BulkAddDialog({ open, onOpenChange }: { open: boolean; onOpenCha
     if (!rows?.length) return;
     const list: Omit<Habit, "id" | "createdAt" | "archived">[] = rows
       .filter((r) => r.name.trim())
-      .map(({ key: _key, ...r }, i) => ({ ...r, name: r.name.trim(), color: HABIT_COLORS[i % HABIT_COLORS.length] }));
+      .map(({ key: _key, ...r }, i) => ({ ...r, name: r.name.trim(), color: HABIT_COLORS[i % HABIT_COLORS.length]! }));
     addHabits(list);
     toast.success(`Added ${list.length} habit${list.length === 1 ? "" : "s"}`);
     setRows(null);

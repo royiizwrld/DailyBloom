@@ -15,10 +15,10 @@ export interface Habit {
   categoryId: string;
   routineId: string | null;
   frequency: Frequency;
-  reminder?: string;
+  reminder?: string | undefined;
   archived: boolean;
   createdAt: string; // yyyy-MM-dd
-  sample?: boolean;
+  sample?: boolean | undefined;
 }
 
 export interface Category {
@@ -36,7 +36,7 @@ export interface Routine {
 export interface Completion {
   habitId: string;
   date: string; // yyyy-MM-dd
-  note?: string;
+  note?: string | undefined;
 }
 
 export interface HabitData {

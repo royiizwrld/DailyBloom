@@ -28,7 +28,7 @@ export function Heatmap({
   onDayClick?: (d: Date) => void;
 }) {
   const days = eachDayOfInterval({ start: startOfMonth(month), end: endOfMonth(month) });
-  const lead = (getDay(days[0]) + 6) % 7;
+  const lead = (getDay(days[0]!) + 6) % 7;
   return (
     <div className="rounded-2xl border bg-card p-4 shadow-card">
       <div className="mb-3 flex items-center justify-between">
