@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as GoalsRouteImport } from './routes/goals'
 import { Route as HistoryRouteImport } from './routes/history'
+import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as StatsRouteImport } from './routes/stats'
 import { Route as ApiBulkParseRouteImport } from './routes/api/bulk-parse'
 import { Route as ApiCoachRouteImport } from './routes/api/coach'
@@ -31,6 +32,11 @@ const GoalsRoute = GoalsRouteImport.update({
 const HistoryRoute = HistoryRouteImport.update({
   id: '/history',
   path: '/history',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SettingsRoute = SettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
   getParentRoute: () => rootRouteImport,
 } as any)
 const StatsRoute = StatsRouteImport.update({
@@ -63,6 +69,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/goals': typeof GoalsRoute
   '/history': typeof HistoryRoute
+  '/settings': typeof SettingsRoute
   '/stats': typeof StatsRoute
   '/api/bulk-parse': typeof ApiBulkParseRoute
   '/api/coach': typeof ApiCoachRoute
@@ -73,6 +80,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/goals': typeof GoalsRoute
   '/history': typeof HistoryRoute
+  '/settings': typeof SettingsRoute
   '/stats': typeof StatsRoute
   '/api/bulk-parse': typeof ApiBulkParseRoute
   '/api/coach': typeof ApiCoachRoute
@@ -84,6 +92,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/goals': typeof GoalsRoute
   '/history': typeof HistoryRoute
+  '/settings': typeof SettingsRoute
   '/stats': typeof StatsRoute
   '/api/bulk-parse': typeof ApiBulkParseRoute
   '/api/coach': typeof ApiCoachRoute
@@ -96,6 +105,7 @@ export interface FileRouteTypes {
     | '/'
     | '/goals'
     | '/history'
+    | '/settings'
     | '/stats'
     | '/api/bulk-parse'
     | '/api/coach'
@@ -106,6 +116,7 @@ export interface FileRouteTypes {
     | '/'
     | '/goals'
     | '/history'
+    | '/settings'
     | '/stats'
     | '/api/bulk-parse'
     | '/api/coach'
@@ -116,6 +127,7 @@ export interface FileRouteTypes {
     | '/'
     | '/goals'
     | '/history'
+    | '/settings'
     | '/stats'
     | '/api/bulk-parse'
     | '/api/coach'
@@ -127,6 +139,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   GoalsRoute: typeof GoalsRoute
   HistoryRoute: typeof HistoryRoute
+  SettingsRoute: typeof SettingsRoute
   StatsRoute: typeof StatsRoute
   ApiBulkParseRoute: typeof ApiBulkParseRoute
   ApiCoachRoute: typeof ApiCoachRoute
@@ -155,6 +168,13 @@ declare module '@tanstack/react-router' {
       path: '/history'
       fullPath: '/history'
       preLoaderRoute: typeof HistoryRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/settings': {
+      id: '/settings'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof SettingsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/stats': {
@@ -199,6 +219,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   GoalsRoute: GoalsRoute,
   HistoryRoute: HistoryRoute,
+  SettingsRoute: SettingsRoute,
   StatsRoute: StatsRoute,
   ApiBulkParseRoute: ApiBulkParseRoute,
   ApiCoachRoute: ApiCoachRoute,
