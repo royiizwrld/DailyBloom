@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { BarChart3, CalendarDays, CheckCircle2, ListChecks, PanelLeftClose, PanelLeftOpen } from "lucide-react";
+import { BarChart3, CalendarDays, CheckCircle2, ListChecks, Target, PanelLeftClose, PanelLeftOpen } from "lucide-react";
 import { useEffect, useState, type ReactNode } from "react";
 import { cn } from "@/lib/utils";
 import { ThemeToggle } from "./ThemeToggle";
@@ -9,6 +9,7 @@ const NAV = [
   { to: "/", label: "Today", icon: CheckCircle2 },
   { to: "/habits", label: "Habits", icon: ListChecks },
   { to: "/history", label: "History", icon: CalendarDays },
+  { to: "/goals", label: "Goals", icon: Target },
   { to: "/stats", label: "Stats", icon: BarChart3 },
 ] as const;
 
@@ -21,7 +22,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   return (
     <div className="min-h-screen bg-background md:flex">
       <aside className={cn("hidden md:flex md:flex-col md:border-r md:bg-sidebar md:sticky md:top-0 md:h-screen transition-[width] duration-200", collapsed ? "md:w-[72px] md:p-3" : "md:w-60 md:p-5")}>
-        <div className={cn("mb-8 flex items-center", collapsed ? "flex-col gap-2" : "justify-between")}>
+        <div className={cn("mb-8 flex items-center", collapsed ? "flex-col gap-2 [&>div]:flex-col" : "justify-between")}>
           {collapsed ? (
             <span className="font-display text-xl font-bold text-primary" title="Daily Bloom">B</span>
           ) : (
@@ -63,7 +64,7 @@ export function AppShell({ children }: { children: ReactNode }) {
 
       <main className="mx-auto w-full max-w-3xl flex-1 px-4 pb-28 pt-5 md:px-8 md:pb-12 md:pt-10">{children}</main>
 
-      <nav className="fixed inset-x-0 bottom-0 z-30 grid grid-cols-4 border-t bg-card/95 backdrop-blur md:hidden">
+      <nav className="fixed inset-x-0 bottom-0 z-30 grid grid-cols-5 border-t bg-card/95 backdrop-blur md:hidden">
         {NAV.map(({ to, label, icon: Icon }) => (
           <Link
             key={to}
