@@ -183,3 +183,45 @@
 }
 @utility habit-solid { background-color: var(--habit); }
 @utility habit-text { color: var(--habit); }
+
+/* Color palettes: html[data-palette] overrides accent tokens; sunrise is the default :root palette. */
+[data-palette="sunrise"], [data-swatch="sunrise"] { --ph: 38; --pc: 0.18; --ph2: 20; }
+[data-palette="ocean"], [data-swatch="ocean"] { --ph: 250; --pc: 0.17; --ph2: 225; }
+[data-palette="forest"], [data-swatch="forest"] { --ph: 160; --pc: 0.13; --ph2: 180; }
+[data-palette="citrus"], [data-swatch="citrus"] { --ph: 125; --pc: 0.17; --ph2: 100; }
+[data-palette="rose"], [data-swatch="rose"] { --ph: 15; --pc: 0.18; --ph2: 40; }
+[data-palette="lagoon"], [data-swatch="lagoon"] { --ph: 205; --pc: 0.12; --ph2: 190; }
+[data-palette="plum"], [data-swatch="plum"] { --ph: 330; --pc: 0.15; --ph2: 305; }
+[data-palette="ember"], [data-swatch="ember"] { --ph: 60; --pc: 0.16; --ph2: 45; }
+[data-palette="glacier"], [data-swatch="glacier"] { --ph: 275; --pc: 0.11; --ph2: 255; }
+[data-palette="graphite"], [data-swatch="graphite"] { --ph: 260; --pc: 0.02; --ph2: 260; }
+[data-palette="mint"], [data-swatch="mint"] { --ph: 165; --pc: 0.12; --ph2: 145; }
+[data-palette="sunflower"], [data-swatch="sunflower"] { --ph: 90; --pc: 0.16; --ph2: 70; }
+[data-swatch] { background-image: linear-gradient(135deg, oklch(0.7 var(--pc) var(--ph)), oklch(0.6 var(--pc) var(--ph2))); }
+html[data-palette] {
+  --primary: oklch(0.6 var(--pc) var(--ph));
+  --ring: var(--primary);
+  --sidebar-primary: var(--primary);
+  --sidebar-ring: var(--primary);
+  --chart-1: var(--primary);
+  --accent: oklch(0.93 calc(var(--pc) * 0.25) var(--ph));
+  --accent-foreground: oklch(0.3 calc(var(--pc) * 0.5) var(--ph));
+  --sidebar-accent: var(--accent);
+  --sidebar-accent-foreground: var(--accent-foreground);
+  --heat-1: oklch(0.86 calc(var(--pc) * 0.4) var(--ph));
+  --heat-2: oklch(0.76 calc(var(--pc) * 0.7) var(--ph));
+  --heat-3: oklch(0.65 var(--pc) var(--ph));
+  --heat-4: oklch(0.52 var(--pc) var(--ph));
+  --gradient-hero: linear-gradient(135deg, oklch(0.66 var(--pc) var(--ph)), oklch(0.56 var(--pc) var(--ph2)));
+}
+html.dark[data-palette] {
+  --primary: oklch(0.72 var(--pc) var(--ph));
+  --primary-foreground: oklch(0.17 0.02 var(--ph));
+  --sidebar-primary-foreground: var(--primary-foreground);
+  --accent: oklch(0.32 calc(var(--pc) * 0.3) var(--ph));
+  --accent-foreground: oklch(0.95 0.01 var(--ph));
+  --heat-1: oklch(0.36 calc(var(--pc) * 0.4) var(--ph));
+  --heat-2: oklch(0.47 calc(var(--pc) * 0.7) var(--ph));
+  --heat-3: oklch(0.6 var(--pc) var(--ph));
+  --heat-4: oklch(0.72 var(--pc) var(--ph));
+}

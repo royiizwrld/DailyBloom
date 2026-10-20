@@ -43,3 +43,22 @@ describe("celebration", () => {
     expect(shouldCelebrate(3, 2, "2026-10-16", [])).toBe(false);
   });
 });
+
+import { goalProgress } from "@/lib/habit-logic";
+describe("goalProgress", () => {
+  const comps = {
+    "r|2026-10-01": { habitId: "r", date: "2026-10-01" },
+    "r|2026-10-02": { habitId: "r", date: "2026-10-02" },
+    "r|2026-09-30": { habitId: "r", date: "2026-09-30" },
+    "x|2026-10-02": { habitId: "x", date: "2026-10-02" },
+  };
+  it("counts only the habit's check-ins since the start date", () => {
+    const p = goalProgress({ habitId: "r", target: 30, startDate: "2026-10-01" }, comps, new Date(2026, 9, 5));
+    expect(p.done).toBe(2);
+    expect(p.complete).toBe(false);
+  });
+  it("is complete when target reached and expired after a missed deadline", () => {
+    expect(goalProgress({ habitId: "r", target: 2, startDate: "2026-10-01" }, comps, new Date(2026, 9, 5)).complete).toBe(true);
+    expect(goalProgress({ habitId: "r", target: 5, startDate: "2026-10-01", deadline: "2026-10-03" }, comps, new Date(2026, 9, 5)).expired).toBe(true);
+  });
+});

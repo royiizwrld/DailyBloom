@@ -1,6 +1,6 @@
 import { addDays, differenceInCalendarDays } from "date-fns";
 import type { HabitData } from "@/types/habit";
-import { dueHabits, frequencyLabel, fromKey, habitStats, isDone, toKey, WEEKDAY_SHORT, weekStart } from "./habit-logic";
+import { dueHabits, goalProgress, frequencyLabel, fromKey, habitStats, isDone, toKey, WEEKDAY_SHORT, weekStart } from "./habit-logic";
 
 /** Compact, number-only summary of the user's data sent to the coach. */
 export function buildCoachSummary(data: HabitData, today: Date) {
@@ -55,5 +55,9 @@ export function buildCoachSummary(data: HabitData, today: Date) {
     habits,
     weeklyTrend,
     fixedHabitsPerWeekday: loadByWeekday,
+    goals: (data.goals ?? []).map((g) => {
+      const p = goalProgress(g, data.completions, today);
+      return { name: g.name, habitId: g.habitId, startDate: g.startDate, deadline: g.deadline ?? null, checkIns: p.done, target: p.target, complete: p.complete, expired: p.expired, daysLeft: p.daysLeft };
+    }),
   };
 }

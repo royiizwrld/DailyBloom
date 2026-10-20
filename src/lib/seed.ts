@@ -13,7 +13,7 @@ export const DEFAULT_ROUTINES: Routine[] = [
 ];
 
 export function emptyData(): HabitData {
-  return { habits: [], categories: DEFAULT_CATEGORIES, routines: DEFAULT_ROUTINES, completions: {}, celebrated: [] };
+  return { habits: [], categories: DEFAULT_CATEGORIES, routines: DEFAULT_ROUTINES, completions: {}, celebrated: [], goals: [] };
 }
 
 /** Builds demo habits with ~6 weeks of deterministic history. Call lazily (never at module scope). */
@@ -49,5 +49,5 @@ export function buildSeed(today: Date): HabitData {
       }
     }
   }
-  return { habits, categories: DEFAULT_CATEGORIES, routines: DEFAULT_ROUTINES, completions, celebrated: [] };
+  return { habits, categories: DEFAULT_CATEGORIES, routines: DEFAULT_ROUTINES, completions, celebrated: [], goals: [] };
 }

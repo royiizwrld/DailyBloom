@@ -22,6 +22,7 @@ const STARTERS = [
   "How was my week?",
   "Which habit should I focus on first?",
   "Am I too ambitious with my list?",
+  "Am I on track with my goals?",
 ];
 
 type Action = { habitId: string; label: string; patch: Partial<Pick<Habit, "frequency" | "routineId" | "name">> };

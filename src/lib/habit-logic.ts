@@ -183,3 +183,18 @@ export function findDuplicate(name: string, habits: Habit[]): Habit | undefined 
     return m === n || (m.length > 3 && n.includes(m)) || (n.length > 3 && m.includes(n));
   });
 }
+
+/** Goal progress: check-ins of the goal's habit from startDate through deadline (or today). */
+export function goalProgress(
+  goal: { habitId: string; target: number; startDate: string; deadline?: string | undefined },
+  completions: Record<string, { habitId: string; date: string }>,
+  today: Date,
+) {
+  const todayKey = toKey(today);
+  const end = goal.deadline && goal.deadline < todayKey ? goal.deadline : todayKey;
+  const done = Object.values(completions).filter((c) => c.habitId === goal.habitId && c.date >= goal.startDate && c.date <= end).length;
+  const complete = done >= goal.target;
+  const expired = !complete && !!goal.deadline && goal.deadline < todayKey;
+  const daysLeft = goal.deadline ? Math.max(0, Math.round((fromKey(goal.deadline).getTime() - fromKey(todayKey).getTime()) / 86400000)) : null;
+  return { done, target: goal.target, pct: Math.min(1, done / Math.max(1, goal.target)), complete, expired, daysLeft };
+}
