@@ -49,5 +49,5 @@ export function buildSeed(today: Date): HabitData {
       }
     }
   }
-  return { habits, categories: DEFAULT_CATEGORIES, routines: DEFAULT_ROUTINES, completions, celebrated: [] };
+  return { habits, categories: DEFAULT_CATEGORIES, routines: DEFAULT_ROUTINES, completions, celebrated: [], goals: [] };
 }
