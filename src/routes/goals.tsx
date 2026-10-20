@@ -36,7 +36,7 @@ function GoalsPage() {
   const submit = (e: React.FormEvent) => {
     e.preventDefault();
     const h = data.activeHabits.find((x) => x.id === habitId);
-    if (!h) return toast.error("Pick a habit for this goal");
+    if (!h) { toast.error("Pick a habit for this goal"); return; }
     data.addGoal({ habitId, target: Math.max(1, target), startDate, deadline: deadline || undefined, name: name.trim() || `${target} days of ${h.name.toLowerCase()}` });
     setName(""); setDeadline("");
     toast.success("Goal added");

@@ -9,7 +9,7 @@ export const PALETTES = [
 ] as const;
 type PaletteName = (typeof PALETTES)[number];
 
-export const THEME_SCRIPT = `(function(){try{var t=localStorage.getItem('theme');var d=t?t==='dark':matchMedia('(prefers-color-scheme: dark)').matches;document.documentElement.classList.toggle('dark',d);var p=localStorage.getItem('palette');if(p&&p!=='sunrise')document.documentElement.dataset.palette=p;}catch(e){}})();`;
+export const THEME_SCRIPT = `(function(){try{var t=localStorage.getItem('theme');var d=t?t==='dark':matchMedia('(prefers-color-scheme: dark)').matches;document.documentElement.classList.toggle('dark',d);var p=localStorage.getItem('palette');if(p&&p!=='sunrise')document.documentElement.dataset["palette"]=p;}catch(e){}})();`;
 
 export function ThemeToggle() {
   const [dark, setDark] = useState(false);
@@ -32,11 +32,11 @@ export function ThemeToggle() {
 
 function PalettePicker() {
   const [current, setCurrent] = useState<PaletteName>("sunrise");
-  useEffect(() => setCurrent((document.documentElement.dataset.palette as PaletteName) || "sunrise"), []);
+  useEffect(() => setCurrent((document.documentElement.dataset["palette"] as PaletteName) || "sunrise"), []);
   const pick = (p: PaletteName) => {
     setCurrent(p);
-    if (p === "sunrise") delete document.documentElement.dataset.palette;
-    else document.documentElement.dataset.palette = p;
+    if (p === "sunrise") delete document.documentElement.dataset["palette"];
+    else document.documentElement.dataset["palette"] = p;
     localStorage.setItem("palette", p);
   };
   return (
