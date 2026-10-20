@@ -49,7 +49,7 @@ function HabitsPage() {
             {!x.archived && ` · 🔥 ${s.currentStreak}`}
           </div>
         </Link>
-        <DropdownMenu>
+        <DropdownMenu modal={false}>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" size="icon" className="size-11" aria-label={`Options for ${x.name}`}><MoreVertical /></Button>
           </DropdownMenuTrigger>
