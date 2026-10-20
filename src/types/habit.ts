@@ -45,6 +45,17 @@ export interface HabitData {
   routines: Routine[];
   completions: Record<string, Completion>; // key: habitId|date
   celebrated: string[];
+  goals: Goal[];
+}
+
+/** Target: reach `target` check-ins of a habit between startDate and optional deadline. */
+export interface Goal {
+  id: string;
+  name: string;
+  habitId: string;
+  target: number;
+  startDate: string; // yyyy-MM-dd
+  deadline?: string | undefined;
 }
 
 export interface HabitStats {

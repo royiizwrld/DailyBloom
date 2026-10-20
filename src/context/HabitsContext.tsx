@@ -1,5 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
-import type { Category, Habit, HabitData, HabitStats, Routine } from "@/types/habit";
+import type { Category, Goal, Habit, HabitData, HabitStats, Routine } from "@/types/habit";
 import { completionKey, habitStats } from "@/lib/habit-logic";
 import { buildSeed, emptyData } from "@/lib/seed";
 
@@ -24,6 +24,8 @@ interface Ctx extends HabitData {
   deleteRoutine: (id: string) => void;
   markCelebrated: (date: string) => void;
   clearSample: () => void;
+  addGoal: (g: Omit<Goal, "id">) => void;
+  deleteGoal: (id: string) => void;
   statsFor: (h: Habit) => HabitStats;
   categoryName: (id: string) => string;
   routineName: (id: string | null) => string;
@@ -84,6 +86,7 @@ export function HabitsProvider({ children }: { children: ReactNode }) {
         update((d) => ({
           ...d,
           habits: d.habits.filter((h) => h.id !== id),
+          goals: (d.goals ?? []).filter((g) => g.habitId !== id),
           completions: Object.fromEntries(Object.entries(d.completions).filter(([, c]) => c.habitId !== id)),
         })),
       toggle: (habitId, date) =>
@@ -134,6 +137,8 @@ export function HabitsProvider({ children }: { children: ReactNode }) {
             celebrated: [],
           };
         }),
+      addGoal: (g) => update((d) => ({ ...d, goals: [...(d.goals ?? []), { ...g, id: uid() }] })),
+      deleteGoal: (id) => update((d) => ({ ...d, goals: (d.goals ?? []).filter((g) => g.id !== id) })),
       statsFor: (h) => habitStats(h, data.completions, today),
       categoryName: (id) => data.categories.find((c) => c.id === id)?.name ?? "Other",
       routineName: (id) => data.routines.find((r) => r.id === id)?.name ?? "Anytime",
