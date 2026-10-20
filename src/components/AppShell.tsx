@@ -1,8 +1,7 @@
 import { Link } from "@tanstack/react-router";
-import { BarChart3, CalendarDays, CheckCircle2, ListChecks, Target, PanelLeftClose, PanelLeftOpen } from "lucide-react";
+import { BarChart3, CalendarDays, CheckCircle2, ListChecks, Target, PanelLeftClose, PanelLeftOpen, Settings } from "lucide-react";
 import { useEffect, useState, type ReactNode } from "react";
 import { cn } from "@/lib/utils";
-import { ThemeToggle } from "./ThemeToggle";
 import { CoachPanel } from "./coach/CoachPanel";
 
 const NAV = [
@@ -11,6 +10,7 @@ const NAV = [
   { to: "/history", label: "History", icon: CalendarDays },
   { to: "/goals", label: "Goals", icon: Target },
   { to: "/stats", label: "Stats", icon: BarChart3 },
+  { to: "/settings", label: "Settings", icon: Settings },
 ] as const;
 
 const COLLAPSE_KEY = "habit-tracker:sidebar-collapsed";
@@ -30,7 +30,6 @@ export function AppShell({ children }: { children: ReactNode }) {
               Daily <span className="text-primary">Bloom</span>
             </span>
           )}
-          <ThemeToggle />
         </div>
         <nav className="flex flex-col gap-1">
           {NAV.map(({ to, label, icon: Icon }) => (
@@ -59,18 +58,17 @@ export function AppShell({ children }: { children: ReactNode }) {
         <span className="font-display text-lg font-bold">
           Daily <span className="text-primary">Bloom</span>
         </span>
-        <ThemeToggle />
       </header>
 
       <main className="mx-auto w-full max-w-3xl flex-1 px-4 pb-28 pt-5 md:px-8 md:pb-12 md:pt-10">{children}</main>
 
-      <nav className="fixed inset-x-0 bottom-0 z-30 grid grid-cols-5 border-t bg-card/95 backdrop-blur md:hidden">
+      <nav className="fixed inset-x-0 bottom-0 z-30 grid grid-cols-6 border-t bg-card/95 backdrop-blur md:hidden">
         {NAV.map(({ to, label, icon: Icon }) => (
           <Link
             key={to}
             to={to}
             activeOptions={{ exact: to === "/" }}
-            className="flex flex-col items-center gap-1 py-2.5 text-xs font-medium text-muted-foreground data-[status=active]:text-primary"
+            className="flex min-w-0 flex-col items-center gap-1 py-2.5 text-[11px] font-medium text-muted-foreground data-[status=active]:text-primary"
           >
             <Icon className="size-6" />
             {label}
