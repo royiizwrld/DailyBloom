@@ -37,7 +37,7 @@ function GoalsPage() {
     e.preventDefault();
     const h = data.activeHabits.find((x) => x.id === habitId);
     if (!h) { toast.error("Pick a habit for this goal"); return; }
-    data.addGoal({ habitId, target: Math.max(1, target), startDate, deadline: deadline || undefined, name: name.trim() || `${target} days of ${h.name.toLowerCase()}` });
+    data.addGoal({ habitId, target: Math.max(1, target), startDate, deadline: deadline || undefined, name: name.trim() || `${h.name} × ${target}` });
     setName(""); setDeadline("");
     toast.success("Goal added");
   };
