@@ -15,6 +15,8 @@ export const Route = createFileRoute("/history")({
       { name: "description", content: "A monthly heatmap of how many of your due habits you completed each day." },
       { property: "og:title", content: "History — Daily Bloom" },
       { property: "og:description", content: "A monthly heatmap of how many of your due habits you completed each day." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
     ],
   }),
   component: History,

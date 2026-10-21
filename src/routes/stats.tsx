@@ -13,6 +13,8 @@ export const Route = createFileRoute("/stats")({
       { name: "description", content: "Weekly completion trends, category rates, best weekdays and a streak leaderboard." },
       { property: "og:title", content: "Stats — Daily Bloom" },
       { property: "og:description", content: "Weekly completion trends, category rates, best weekdays and a streak leaderboard." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
     ],
   }),
   component: Stats,

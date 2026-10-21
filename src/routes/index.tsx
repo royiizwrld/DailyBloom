@@ -22,6 +22,8 @@ export const Route = createFileRoute("/")({
       { name: "description", content: "Check off today's habits, see your progress and keep your streaks alive." },
       { property: "og:title", content: "Today — Daily Bloom" },
       { property: "og:description", content: "Check off today's habits, see your progress and keep your streaks alive." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
     ],
   }),
   validateSearch: (s: Record<string, unknown>): { date?: string | undefined } =>

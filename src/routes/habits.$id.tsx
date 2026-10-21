@@ -17,6 +17,8 @@ export const Route = createFileRoute("/habits/$id")({
       { name: "description", content: "Streaks, 30-day completion rate, calendar and notes for one habit." },
       { property: "og:title", content: "Habit details — Daily Bloom" },
       { property: "og:description", content: "Streaks, 30-day completion rate, calendar and notes for one habit." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
     ],
   }),
   component: HabitDetail,
