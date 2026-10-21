@@ -1,11 +1,11 @@
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport, type UIMessage } from "ai";
-import { Check, Leaf, Trash2, X } from "lucide-react";
+import { Check, History, Leaf, Mic, MicOff, Plus, Trash2, X } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import { Conversation, ConversationContent, ConversationEmptyState, ConversationScrollButton } from "@/components/ai-elements/conversation";
 import { Message, MessageContent, MessageResponse } from "@/components/ai-elements/message";
-import { PromptInput, PromptInputFooter, PromptInputSubmit, PromptInputTextarea } from "@/components/ai-elements/prompt-input";
+import { PromptInput, PromptInputButton, PromptInputFooter, PromptInputProvider, PromptInputSubmit, PromptInputTextarea, usePromptInputController } from "@/components/ai-elements/prompt-input";
 import { Shimmer } from "@/components/ai-elements/shimmer";
 import { Suggestion, Suggestions } from "@/components/ai-elements/suggestion";
 import { Button } from "@/components/ui/button";
@@ -76,13 +76,91 @@ export function CoachPanel() {
   );
 }
 
+type Thread = { id: string; title: string; updatedAt: number; messages: UIMessage[] };
+const THREADS_KEY = "habit-tracker:coach-threads";
+
+function loadThreads(): Thread[] {
+  try {
+    const raw = localStorage.getItem(THREADS_KEY);
+    if (raw) return JSON.parse(raw) as Thread[];
+    const old = localStorage.getItem(CHAT_KEY);
+    if (old) {
+      const msgs = JSON.parse(old) as UIMessage[];
+      localStorage.removeItem(CHAT_KEY);
+      if (msgs.length) return [{ id: crypto.randomUUID(), title: titleOf(msgs), updatedAt: Date.now(), messages: msgs }];
+    }
+  } catch { /* ignore */ }
+  return [];
+}
+function titleOf(msgs: UIMessage[]) {
+  const first = msgs.find((m) => m.role === "user");
+  const t = first?.parts.map((p) => (p.type === "text" ? p.text : "")).join("").trim() ?? "";
+  return t ? (t.length > 48 ? t.slice(0, 48) + "…" : t) : "New chat";
+}
+
 function CoachChat() {
+  const [threads, setThreads] = useState<Thread[]>(() => loadThreads());
+  const [activeId, setActiveId] = useState<string>(() => crypto.randomUUID());
+  const [showHistory, setShowHistory] = useState(false);
+  const save = (next: Thread[]) => { setThreads(next); localStorage.setItem(THREADS_KEY, JSON.stringify(next)); };
+  const active = threads.find((t) => t.id === activeId);
+  const persist = (msgs: UIMessage[]) => {
+    if (!msgs.length) return;
+    const rest = threads.filter((t) => t.id !== activeId);
+    save([{ id: activeId, title: titleOf(msgs), updatedAt: Date.now(), messages: msgs }, ...rest]);
+  };
+  const del = (id: string) => {
+    save(threads.filter((t) => t.id !== id));
+    if (id === activeId) setActiveId(crypto.randomUUID());
+  };
+  return (
+    <>
+      <SheetHeader className="flex-row items-center justify-between gap-2 border-b p-4 pr-12">
+        <SheetTitle className="flex items-center gap-2 font-display">
+          <span className="flex size-9 items-center justify-center rounded-full bg-hero text-primary-foreground"><Leaf className="size-5" /></span>
+          Habit coach
+        </SheetTitle>
+        <div className="flex gap-1">
+          <Button variant="ghost" size="sm" onClick={() => setShowHistory((v) => !v)} aria-pressed={showHistory}><History /> History</Button>
+          <Button variant="ghost" size="sm" onClick={() => { setActiveId(crypto.randomUUID()); setShowHistory(false); }}><Plus /> New</Button>
+        </div>
+      </SheetHeader>
+      {showHistory ? (
+        <div className="flex-1 overflow-y-auto p-3">
+          {threads.length === 0 ? (
+            <p className="p-6 text-center text-sm text-muted-foreground">No past chats yet.</p>
+          ) : (
+            <ul className="space-y-2">
+              {[...threads].sort((a, b) => b.updatedAt - a.updatedAt).map((t) => (
+                <li key={t.id} className={`flex items-center gap-2 rounded-xl border p-2 ${t.id === activeId ? "border-primary bg-accent" : "bg-card"}`}>
+                  <button type="button" className="min-w-0 flex-1 px-2 py-1 text-left" onClick={() => { setActiveId(t.id); setShowHistory(false); }}>
+                    <div className="truncate text-sm font-medium">{t.title}</div>
+                    <div className="text-xs text-muted-foreground">{new Date(t.updatedAt).toLocaleString()} · {t.messages.length} messages</div>
+                  </button>
+                  <Button variant="ghost" size="icon" aria-label="Delete chat" onClick={() => del(t.id)}><Trash2 /></Button>
+                </li>
+              ))}
+            </ul>
+          )}
+          {threads.length > 0 && (
+            <Button variant="outline" size="sm" className="mt-3 w-full" onClick={() => { save([]); setActiveId(crypto.randomUUID()); }}>Clear all history</Button>
+          )}
+        </div>
+      ) : (
+        <ChatWindow key={activeId} id={activeId} initial={active?.messages ?? []} onPersist={persist} onClear={() => { del(activeId); }} />
+      )}
+    </>
+  );
+}
+
+function ChatWindow({ id, initial, onPersist, onClear }: { id: string; initial: UIMessage[]; onPersist: (m: UIMessage[]) => void; onClear: () => void }) {
   const data = useHabits();
-  const loadedRef = useRef(false);
   const [applied, setApplied] = useState<Record<string, boolean>>({});
   const [pending, setPending] = useState<{ key: string; action: Action } | null>(null);
   const transport = useMemo(() => new DefaultChatTransport({ api: "/api/coach" }), []);
   const { messages, sendMessage, status, stop, setMessages, error } = useChat({
+    id,
+    messages: initial,
     transport,
     onError: (e) => {
       let msg = e.message;
@@ -90,18 +168,14 @@ function CoachChat() {
       toast.error(msg || "The coach couldn't respond. Please try again.");
     },
   });
-
+  const persistRef = useRef(onPersist);
+  persistRef.current = onPersist;
+  const lastSaved = useRef(initial.length);
   useEffect(() => {
-    if (loadedRef.current) return;
-    loadedRef.current = true;
-    try {
-      const raw = localStorage.getItem(CHAT_KEY);
-      if (raw) setMessages(JSON.parse(raw) as UIMessage[]);
-    } catch { /* ignore */ }
-  }, [setMessages]);
-
-  useEffect(() => {
-    if (loadedRef.current && (status === "ready" || status === "error")) localStorage.setItem(CHAT_KEY, JSON.stringify(messages));
+    if ((status === "ready" || status === "error") && messages.length !== lastSaved.current) {
+      lastSaved.current = messages.length;
+      persistRef.current(messages);
+    }
   }, [messages, status]);
 
   const busy = status === "submitted" || status === "streaming";
@@ -129,17 +203,11 @@ function CoachChat() {
 
   return (
     <>
-      <SheetHeader className="flex-row items-center justify-between border-b p-4 pr-12">
-        <SheetTitle className="flex items-center gap-2 font-display">
-          <span className="flex size-9 items-center justify-center rounded-full bg-hero text-primary-foreground"><Leaf className="size-5" /></span>
-          Habit coach
-        </SheetTitle>
-        {messages.length > 0 && (
-          <Button variant="ghost" size="sm" onClick={() => { stop(); setMessages([]); localStorage.removeItem(CHAT_KEY); }}>
-            <Trash2 /> Clear chat
-          </Button>
-        )}
-      </SheetHeader>
+      {messages.length > 0 && (
+        <div className="flex justify-end border-b px-3 py-1">
+          <Button variant="ghost" size="sm" onClick={() => { stop(); setMessages([]); onClear(); }}><Trash2 /> Clear chat</Button>
+        </div>
+      )}
 
       <Conversation className="flex-1">
         <ConversationContent>
@@ -200,13 +268,55 @@ function CoachChat() {
             {STARTERS.map((s) => <Suggestion key={s} suggestion={s} onClick={send} />)}
           </Suggestions>
         )}
-        <PromptInput onSubmit={(msg) => send(msg.text ?? "")}>
-          <PromptInputTextarea placeholder="Ask your coach…" />
-          <PromptInputFooter className="justify-end">
-            <PromptInputSubmit status={status} onStop={stop} />
-          </PromptInputFooter>
-        </PromptInput>
+        <PromptInputProvider>
+          <PromptInput onSubmit={(msg) => send(msg.text ?? "")}>
+            <PromptInputTextarea placeholder="Ask your coach… or tap the mic" />
+            <PromptInputFooter className="justify-between">
+              <MicButton />
+              <PromptInputSubmit status={status} onStop={stop} />
+            </PromptInputFooter>
+          </PromptInput>
+        </PromptInputProvider>
       </div>
     </>
+  );
+}
+
+type SpeechRec = { lang: string; interimResults: boolean; continuous: boolean; start: () => void; stop: () => void; onresult: ((e: { results: ArrayLike<ArrayLike<{ transcript: string }> & { isFinal: boolean }> }) => void) | null; onerror: ((e: { error: string }) => void) | null; onend: (() => void) | null };
+
+function MicButton() {
+  const { textInput } = usePromptInputController();
+  const [listening, setListening] = useState(false);
+  const recRef = useRef<SpeechRec | null>(null);
+  const baseRef = useRef("");
+  useEffect(() => () => recRef.current?.stop(), []);
+  const toggle = () => {
+    if (listening) { recRef.current?.stop(); return; }
+    const w = window as unknown as { SpeechRecognition?: new () => SpeechRec; webkitSpeechRecognition?: new () => SpeechRec };
+    const Ctor = w.SpeechRecognition ?? w.webkitSpeechRecognition;
+    if (!Ctor) { toast.error("Voice input isn't supported in this browser. Try Chrome, Edge or Safari."); return; }
+    const rec = new Ctor();
+    rec.lang = navigator.language || "en-US";
+    rec.interimResults = true;
+    rec.continuous = true;
+    baseRef.current = textInput.value ? textInput.value.trimEnd() + " " : "";
+    rec.onresult = (e) => {
+      let t = "";
+      for (let i = 0; i < e.results.length; i++) t += e.results[i][0].transcript;
+      textInput.setInput(baseRef.current + t);
+    };
+    rec.onerror = (e) => {
+      if (e.error === "not-allowed" || e.error === "service-not-allowed") toast.error("Microphone access was blocked. Allow it in your browser to use voice.");
+      else if (e.error !== "no-speech" && e.error !== "aborted") toast.error("Voice input stopped. Please try again.");
+    };
+    rec.onend = () => setListening(false);
+    recRef.current = rec;
+    try { rec.start(); setListening(true); } catch { setListening(false); }
+  };
+  return (
+    <PromptInputButton onClick={toggle} aria-label={listening ? "Stop voice input" : "Start voice input"} aria-pressed={listening} className={listening ? "animate-pulse text-destructive" : ""}>
+      {listening ? <MicOff /> : <Mic />}
+      <span className="text-xs">{listening ? "Listening…" : "Voice"}</span>
+    </PromptInputButton>
   );
 }
