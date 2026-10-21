@@ -21,6 +21,8 @@ export const Route = createFileRoute("/habits/")({
       { name: "description", content: "Create, edit, archive and organise your habits, categories and routines." },
       { property: "og:title", content: "Your habits — Daily Bloom" },
       { property: "og:description", content: "Create, edit, archive and organise your habits, categories and routines." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
     ],
   }),
   component: HabitsPage,

@@ -12,3 +12,4 @@
 ## Project rules
 - All habit data lives in browser localStorage via `src/context/HabitsContext.tsx`; frequency/streak rules are pure functions in `src/lib/habit-logic.ts` (unit-tested) so UI and AI coach share one source of truth.
 - AI calls (coach chat, bulk add) run in server routes under `src/routes/api/` through the Lovable AI Gateway so the key never reaches the browser.
+- Coach markdown excludes the Mermaid plugin; unused diagram dependencies must not enter the startup graph because a graph-layout initialization error prevents all controls from hydrating.
