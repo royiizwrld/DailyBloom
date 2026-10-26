@@ -1,4 +1,4 @@
-# Habit Helper Hub
+# DailyBloom
 
 Build a responsive daily Habit & Routine Tracker web app with a clean, motivating, modern design (card layout, mobile-first, large tap targets for checking off habits).
 
