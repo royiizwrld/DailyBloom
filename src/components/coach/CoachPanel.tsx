@@ -302,7 +302,7 @@ function MicButton() {
     baseRef.current = textInput.value ? textInput.value.trimEnd() + " " : "";
     rec.onresult = (e) => {
       let t = "";
-      for (let i = 0; i < e.results.length; i++) t += e.results[i][0].transcript;
+      for (let i = 0; i < e.results.length; i++) t += (e.results[i]?.[0]?.transcript ?? "");
       textInput.setInput(baseRef.current + t);
     };
     rec.onerror = (e) => {
