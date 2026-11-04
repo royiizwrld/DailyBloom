@@ -14,7 +14,204 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      categories: {
+        Row: {
+          built_in: boolean
+          created_at: string
+          id: string
+          name: string
+          user_id: string
+        }
+        Insert: {
+          built_in?: boolean
+          created_at?: string
+          id: string
+          name: string
+          user_id?: string
+        }
+        Update: {
+          built_in?: boolean
+          created_at?: string
+          id?: string
+          name?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      celebrations: {
+        Row: {
+          day: string
+          user_id: string
+        }
+        Insert: {
+          day: string
+          user_id?: string
+        }
+        Update: {
+          day?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      completions: {
+        Row: {
+          created_at: string
+          day: string
+          habit_id: string
+          note: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          day: string
+          habit_id: string
+          note?: string | null
+          user_id?: string
+        }
+        Update: {
+          created_at?: string
+          day?: string
+          habit_id?: string
+          note?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      goals: {
+        Row: {
+          deadline: string | null
+          habit_id: string
+          id: string
+          name: string
+          start_date: string
+          target: number
+          user_id: string
+        }
+        Insert: {
+          deadline?: string | null
+          habit_id: string
+          id: string
+          name: string
+          start_date: string
+          target: number
+          user_id?: string
+        }
+        Update: {
+          deadline?: string | null
+          habit_id?: string
+          id?: string
+          name?: string
+          start_date?: string
+          target?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
+      habits: {
+        Row: {
+          archived: boolean
+          category_id: string
+          color: string
+          created_at: string
+          created_on: string
+          frequency: Json
+          icon: string
+          id: string
+          name: string
+          reminder: string | null
+          routine_id: string | null
+          user_id: string
+        }
+        Insert: {
+          archived?: boolean
+          category_id?: string
+          color?: string
+          created_at?: string
+          created_on?: string
+          frequency?: Json
+          icon?: string
+          id: string
+          name: string
+          reminder?: string | null
+          routine_id?: string | null
+          user_id?: string
+        }
+        Update: {
+          archived?: boolean
+          category_id?: string
+          color?: string
+          created_at?: string
+          created_on?: string
+          frequency?: Json
+          icon?: string
+          id?: string
+          name?: string
+          reminder?: string | null
+          routine_id?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          created_at: string
+          first_name: string
+          id: string
+          last_name: string | null
+          palette: string
+          terms_accepted_at: string | null
+          terms_version: string | null
+          theme_preference: string
+          timezone: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          first_name?: string
+          id: string
+          last_name?: string | null
+          palette?: string
+          terms_accepted_at?: string | null
+          terms_version?: string | null
+          theme_preference?: string
+          timezone?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          first_name?: string
+          id?: string
+          last_name?: string | null
+          palette?: string
+          terms_accepted_at?: string | null
+          terms_version?: string | null
+          theme_preference?: string
+          timezone?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      routines: {
+        Row: {
+          id: string
+          name: string
+          sort_order: number
+          user_id: string
+        }
+        Insert: {
+          id: string
+          name: string
+          sort_order?: number
+          user_id?: string
+        }
+        Update: {
+          id?: string
+          name?: string
+          sort_order?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
