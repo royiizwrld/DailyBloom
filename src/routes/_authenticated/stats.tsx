@@ -6,7 +6,7 @@ import { HabitBadge, PageHeader, StatTile } from "@/components/habit-ui";
 import { useHabits } from "@/context/HabitsContext";
 import { dueHabits, isDone, toKey, WEEKDAY_SHORT, weekStart } from "@/lib/habit-logic";
 
-export const Route = createFileRoute("/stats")({
+export const Route = createFileRoute("/_authenticated/stats")({
   head: () => ({
     meta: [
       { title: "Stats — Daily Bloom" },

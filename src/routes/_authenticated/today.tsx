@@ -15,7 +15,7 @@ import { useHabits } from "@/context/HabitsContext";
 import { dueHabits, fromKey, isDone, shouldCelebrate, toKey } from "@/lib/habit-logic";
 import type { Filters, Habit } from "@/types/habit";
 
-export const Route = createFileRoute("/")({
+export const Route = createFileRoute("/_authenticated/today")({
   head: () => ({
     meta: [
       { title: "Today — Daily Bloom" },
@@ -34,7 +34,7 @@ export const Route = createFileRoute("/")({
 function Today() {
   const { activeHabits, completions, today, loaded, categories, routines, celebrated, markCelebrated } = useHabits();
   const search = Route.useSearch();
-  const navigate = useNavigate({ from: "/" });
+  const navigate = useNavigate({ from: "/today" });
   const [pickerOpen, setPickerOpen] = useState(false);
   const parsed = search.date ? fromKey(search.date) : today;
   const date = parsed > today ? today : parsed;

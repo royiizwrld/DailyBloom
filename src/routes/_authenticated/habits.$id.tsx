@@ -10,7 +10,7 @@ import { useHabits } from "@/context/HabitsContext";
 import { frequencyLabel, isDone, isScheduledOn, toKey, WEEKDAY_SHORT, weekCount } from "@/lib/habit-logic";
 import { cn } from "@/lib/utils";
 
-export const Route = createFileRoute("/habits/$id")({
+export const Route = createFileRoute("/_authenticated/habits/$id")({
   head: () => ({
     meta: [
       { title: "Habit details — Daily Bloom" },

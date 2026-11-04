@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useHabits } from "@/context/HabitsContext";
 import { goalProgress, toKey } from "@/lib/habit-logic";
 
-export const Route = createFileRoute("/goals")({
+export const Route = createFileRoute("/_authenticated/goals")({
   head: () => ({
     meta: [
       { title: "Goals · Daily Bloom" },
