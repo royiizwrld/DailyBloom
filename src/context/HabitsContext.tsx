@@ -1,14 +1,21 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { toast } from "sonner";
 import type { Category, Goal, Habit, HabitData, HabitStats, Routine } from "@/types/habit";
-import { completionKey, habitStats } from "@/lib/habit-logic";
-import { buildSeed, emptyData } from "@/lib/seed";
+import { completionKey, habitStats, toKey } from "@/lib/habit-logic";
+import { emptyData } from "@/lib/seed";
+import { supabase } from "@/integrations/supabase/client";
+import { goalToRow, habitToRow, importData, loadUserData, todayInZone } from "@/lib/cloud-data";
+import { useAuth } from "./AuthContext";
 
-const STORAGE_KEY = "habit-tracker:v1";
+/** Legacy key from the local-only version; read once for the import prompt. */
+export const LEGACY_STORAGE_KEY = "habit-tracker:v1";
 
-const uid = () => Math.random().toString(36).slice(2, 10);
+const uid = () => crypto.randomUUID().slice(0, 12);
 
 interface Ctx extends HabitData {
   loaded: boolean;
+  loadError: string | null;
+  reload: () => void;
   today: Date;
   activeHabits: Habit[];
   hasSample: boolean;
@@ -29,122 +36,222 @@ interface Ctx extends HabitData {
   statsFor: (h: Habit) => HabitStats;
   categoryName: (id: string) => string;
   routineName: (id: string | null) => string;
+  pendingImport: HabitData | null;
+  runImport: () => Promise<void>;
+  skipImport: () => void;
 }
 
 const HabitsContext = createContext<Ctx | null>(null);
 
+function readLegacy(): HabitData | null {
+  try {
+    const raw = localStorage.getItem(LEGACY_STORAGE_KEY);
+    if (!raw) return null;
+    const d = { ...emptyData(), ...JSON.parse(raw) } as HabitData;
+    return d.habits.some((h) => !h.sample) ? d : null;
+  } catch {
+    return null;
+  }
+}
+
 export function HabitsProvider({ children }: { children: ReactNode }) {
+  const { user, profile } = useAuth();
+  const userId = user?.id;
+  const tz = profile?.timezone ?? (typeof Intl !== "undefined" ? Intl.DateTimeFormat().resolvedOptions().timeZone : "UTC");
   const [data, setData] = useState<HabitData>(emptyData);
   const [loaded, setLoaded] = useState(false);
-  const [today, setToday] = useState(() => new Date());
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [today, setToday] = useState(() => todayInZone(tz));
+  const [pendingImport, setPendingImport] = useState<HabitData | null>(null);
+  const [nonce, setNonce] = useState(0);
+  const dataRef = useRef(data);
+  dataRef.current = data;
 
   useEffect(() => {
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      setData(raw ? { ...emptyData(), ...JSON.parse(raw) } : buildSeed(new Date()));
-    } catch {
-      setData(buildSeed(new Date()));
-    }
-    setToday(new Date());
-    setLoaded(true);
+    setToday(todayInZone(tz));
+    const t = setInterval(() => setToday((prev) => {
+      const n = todayInZone(tz);
+      return n.getTime() === prev.getTime() ? prev : n;
+    }), 60_000);
+    return () => clearInterval(t);
+  }, [tz]);
+
+  useEffect(() => {
+    if (!userId) return;
+    let cancelled = false;
+    setLoadError(null);
+    loadUserData(supabase)
+      .then((d) => {
+        if (cancelled) return;
+        setData(d);
+        setLoaded(true);
+        const legacy = readLegacy();
+        if (legacy && localStorage.getItem(`habit-tracker:import-skipped:${userId}`) !== "1") setPendingImport(legacy);
+      })
+      .catch((e: Error) => !cancelled && setLoadError(e.message || "Couldn't load your habits."));
+    return () => { cancelled = true; };
+  }, [userId, nonce]);
+
+  const reload = useCallback(() => setNonce((n) => n + 1), []);
+
+  /** Run a DB write; on failure tell the user and offer retry. Optimistic state is already applied. */
+  const persist = useCallback((label: string, op: () => PromiseLike<{ error: { message: string } | null }>) => {
+    const run = async () => {
+      try {
+        const { error } = await op();
+        if (error) throw new Error(error.message);
+      } catch (e) {
+        const offline = typeof navigator !== "undefined" && !navigator.onLine;
+        toast.error(offline ? `You're offline — couldn't save ${label}.` : `Couldn't save ${label}.`, {
+          description: offline ? "Reconnect and tap Retry." : (e as Error).message,
+          action: { label: "Retry", onClick: () => void run() },
+          duration: 10000,
+        });
+      }
+    };
+    void run();
   }, []);
 
-  useEffect(() => {
-    if (loaded) localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-  }, [data, loaded]);
-
-  const todayKey = today.toDateString();
-  const update = useCallback((fn: (d: HabitData) => HabitData) => setData(fn), []);
+  const todayKey = today.getTime();
 
   const value = useMemo<Ctx>(() => {
-    const make = (h: Omit<Habit, "id" | "createdAt" | "archived">): Habit => ({
-      ...h, id: uid(), archived: false, createdAt: new Date().toISOString().slice(0, 10),
-    });
-    // createdAt uses local date
-    const localKey = () => {
-      const d = new Date();
-      return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
-    };
+    const u = userId ?? "";
+    const localKey = () => toKey(todayInZone(tz));
+    const make = (h: Omit<Habit, "id" | "createdAt" | "archived">): Habit => ({ ...h, id: uid(), archived: false, createdAt: localKey() });
     return {
       ...data,
       loaded,
+      loadError,
+      reload,
       today,
       activeHabits: data.habits.filter((h) => !h.archived),
-      hasSample: data.habits.some((h) => h.sample),
+      hasSample: false,
       addHabit: (h) => {
-        const nh = { ...make(h), createdAt: localKey() };
-        update((d) => ({ ...d, habits: [...d.habits, nh] }));
+        const nh = make(h);
+        setData((d) => ({ ...d, habits: [...d.habits, nh] }));
+        persist("your habit", () => supabase.from("habits").upsert(habitToRow(nh, u)));
         return nh;
       },
       addHabits: (hs) => {
-        const list = hs.map((h) => ({ ...make(h), createdAt: localKey() }));
-        update((d) => ({ ...d, habits: [...d.habits, ...list] }));
+        const list = hs.map(make);
+        setData((d) => ({ ...d, habits: [...d.habits, ...list] }));
+        persist("your habits", () => supabase.from("habits").upsert(list.map((h) => habitToRow(h, u))));
       },
-      updateHabit: (id, patch) =>
-        update((d) => ({ ...d, habits: d.habits.map((h) => (h.id === id ? { ...h, ...patch } : h)) })),
-      deleteHabit: (id) =>
-        update((d) => ({
+      updateHabit: (id, patch) => {
+        const cur = dataRef.current.habits.find((h) => h.id === id);
+        if (!cur) return;
+        const next = { ...cur, ...patch };
+        setData((d) => ({ ...d, habits: d.habits.map((h) => (h.id === id ? next : h)) }));
+        persist("your change", () => supabase.from("habits").upsert(habitToRow(next, u)));
+      },
+      deleteHabit: (id) => {
+        setData((d) => ({
           ...d,
           habits: d.habits.filter((h) => h.id !== id),
-          goals: (d.goals ?? []).filter((g) => g.habitId !== id),
+          goals: d.goals.filter((g) => g.habitId !== id),
           completions: Object.fromEntries(Object.entries(d.completions).filter(([, c]) => c.habitId !== id)),
-        })),
-      toggle: (habitId, date) =>
-        update((d) => {
-          const k = completionKey(habitId, date);
+        }));
+        persist("the deletion", async () => {
+          const a = await supabase.from("completions").delete().eq("habit_id", id);
+          if (a.error) return a;
+          const b = await supabase.from("goals").delete().eq("habit_id", id);
+          if (b.error) return b;
+          return supabase.from("habits").delete().eq("id", id);
+        });
+      },
+      toggle: (habitId, date) => {
+        const k = completionKey(habitId, date);
+        const exists = !!dataRef.current.completions[k];
+        setData((d) => {
           const completions = { ...d.completions };
           if (completions[k]) delete completions[k];
           else completions[k] = { habitId, date };
           return { ...d, completions };
-        }),
-      setNote: (habitId, date, note) =>
-        update((d) => {
+        });
+        persist("your check-in", () =>
+          exists
+            ? supabase.from("completions").delete().eq("habit_id", habitId).eq("day", date)
+            : supabase.from("completions").upsert({ user_id: u, habit_id: habitId, day: date }),
+        );
+      },
+      setNote: (habitId, date, note) => {
+        const clean = note.trim() || undefined;
+        setData((d) => {
           const k = completionKey(habitId, date);
           const existing = d.completions[k] ?? { habitId, date };
-          return { ...d, completions: { ...d.completions, [k]: { ...existing, note: note.trim() || undefined } } };
-        }),
+          return { ...d, completions: { ...d.completions, [k]: { ...existing, note: clean } } };
+        });
+        persist("your note", () => supabase.from("completions").upsert({ user_id: u, habit_id: habitId, day: date, note: clean ?? null }));
+      },
       addCategory: (name) => {
         const c = { id: uid(), name: name.trim() };
-        update((d) => ({ ...d, categories: [...d.categories, c] }));
+        setData((d) => ({ ...d, categories: [...d.categories, c] }));
+        persist("the category", () => supabase.from("categories").upsert({ user_id: u, id: c.id, name: c.name }));
         return c;
       },
-      deleteCategory: (id) =>
-        update((d) => ({
+      deleteCategory: (id) => {
+        setData((d) => ({
           ...d,
           categories: d.categories.filter((c) => c.id !== id),
           habits: d.habits.map((h) => (h.categoryId === id ? { ...h, categoryId: "other" } : h)),
-        })),
+        }));
+        persist("the category change", async () => {
+          const a = await supabase.from("habits").update({ category_id: "other" }).eq("category_id", id);
+          if (a.error) return a;
+          return supabase.from("categories").delete().eq("id", id);
+        });
+      },
       addRoutine: (name) => {
         const r = { id: uid(), name: name.trim(), order: data.routines.length };
-        update((d) => ({ ...d, routines: [...d.routines, r] }));
+        setData((d) => ({ ...d, routines: [...d.routines, r] }));
+        persist("the routine", () => supabase.from("routines").upsert({ user_id: u, id: r.id, name: r.name, sort_order: r.order }));
         return r;
       },
-      deleteRoutine: (id) =>
-        update((d) => ({
+      deleteRoutine: (id) => {
+        setData((d) => ({
           ...d,
           routines: d.routines.filter((r) => r.id !== id),
           habits: d.habits.map((h) => (h.routineId === id ? { ...h, routineId: null } : h)),
-        })),
-      markCelebrated: (date) =>
-        update((d) => (d.celebrated.includes(date) ? d : { ...d, celebrated: [...d.celebrated, date] })),
-      clearSample: () =>
-        update((d) => {
-          const ids = new Set(d.habits.filter((h) => h.sample).map((h) => h.id));
-          return {
-            ...d,
-            habits: d.habits.filter((h) => !ids.has(h.id)),
-            completions: Object.fromEntries(Object.entries(d.completions).filter(([, c]) => !ids.has(c.habitId))),
-            celebrated: [],
-          };
-        }),
-      addGoal: (g) => update((d) => ({ ...d, goals: [...(d.goals ?? []), { ...g, id: uid() }] })),
-      deleteGoal: (id) => update((d) => ({ ...d, goals: (d.goals ?? []).filter((g) => g.id !== id) })),
+        }));
+        persist("the routine change", async () => {
+          const a = await supabase.from("habits").update({ routine_id: null }).eq("routine_id", id);
+          if (a.error) return a;
+          return supabase.from("routines").delete().eq("id", id);
+        });
+      },
+      markCelebrated: (date) => {
+        if (dataRef.current.celebrated.includes(date)) return;
+        setData((d) => ({ ...d, celebrated: [...d.celebrated, date] }));
+        persist("today's celebration", () => supabase.from("celebrations").upsert({ user_id: u, day: date }));
+      },
+      clearSample: () => undefined,
+      addGoal: (g) => {
+        const ng = { ...g, id: uid() };
+        setData((d) => ({ ...d, goals: [...d.goals, ng] }));
+        persist("your goal", () => supabase.from("goals").upsert(goalToRow(ng, u)));
+      },
+      deleteGoal: (id) => {
+        setData((d) => ({ ...d, goals: d.goals.filter((g) => g.id !== id) }));
+        persist("the goal deletion", () => supabase.from("goals").delete().eq("id", id));
+      },
       statsFor: (h) => habitStats(h, data.completions, today),
       categoryName: (id) => data.categories.find((c) => c.id === id)?.name ?? "Other",
       routineName: (id) => data.routines.find((r) => r.id === id)?.name ?? "Anytime",
+      pendingImport,
+      runImport: async () => {
+        if (!pendingImport || !userId) return;
+        await importData(supabase, userId, pendingImport);
+        localStorage.removeItem(LEGACY_STORAGE_KEY);
+        setPendingImport(null);
+        setData(await loadUserData(supabase));
+      },
+      skipImport: () => {
+        if (userId) localStorage.setItem(`habit-tracker:import-skipped:${userId}`, "1");
+        setPendingImport(null);
+      },
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [data, loaded, todayKey, update]);
+  }, [data, loaded, loadError, todayKey, userId, tz, pendingImport, persist, reload]);
 
   return <HabitsContext.Provider value={value}>{children}</HabitsContext.Provider>;
 }
