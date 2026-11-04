@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils";
 import { CoachPanel } from "./coach/CoachPanel";
 
 const NAV = [
-  { to: "/", label: "Today", icon: CheckCircle2 },
+  { to: "/today", label: "Today", icon: CheckCircle2 },
   { to: "/habits", label: "Habits", icon: ListChecks },
   { to: "/history", label: "History", icon: CalendarDays },
   { to: "/goals", label: "Goals", icon: Target },
@@ -36,7 +36,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             <Link
               key={to}
               to={to}
-              activeOptions={{ exact: to === "/" }}
+              activeOptions={{ exact: true }}
               title={collapsed ? label : undefined}
               className={cn("flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground data-[status=active]:bg-sidebar-accent data-[status=active]:text-sidebar-accent-foreground", collapsed && "justify-center px-0")}
             >
@@ -67,7 +67,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           <Link
             key={to}
             to={to}
-            activeOptions={{ exact: to === "/" }}
+            activeOptions={{ exact: true }}
             className="flex min-w-0 flex-col items-center gap-1 py-2.5 text-[11px] font-medium text-muted-foreground data-[status=active]:text-primary"
           >
             <Icon className="size-6" />

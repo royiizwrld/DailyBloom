@@ -14,7 +14,7 @@ import { useHabits } from "@/context/HabitsContext";
 import { frequencyLabel } from "@/lib/habit-logic";
 import type { Habit } from "@/types/habit";
 
-export const Route = createFileRoute("/habits/")({
+export const Route = createFileRoute("/_authenticated/habits/")({
   head: () => ({
     meta: [
       { title: "Your habits — Daily Bloom" },

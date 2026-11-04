@@ -8,7 +8,7 @@ import { useHabits } from "@/context/HabitsContext";
 import { dayRate, toKey } from "@/lib/habit-logic";
 import type { Filters } from "@/types/habit";
 
-export const Route = createFileRoute("/history")({
+export const Route = createFileRoute("/_authenticated/history")({
   head: () => ({
     meta: [
       { title: "History — Daily Bloom" },
@@ -48,7 +48,7 @@ function History() {
         <StatTile label="Perfect days" value={summary.perfect} />
         <StatTile label="Days tracked" value={summary.tracked} />
       </div>
-      <Heatmap month={month} onMonthChange={setMonth} today={today} valueFor={(d) => dayRate(habits, d, completions)} onDayClick={(d) => navigate({ to: "/", search: { date: toKey(d) } })} />
+      <Heatmap month={month} onMonthChange={setMonth} today={today} valueFor={(d) => dayRate(habits, d, completions)} onDayClick={(d) => navigate({ to: "/today", search: { date: toKey(d) } })} />
       <p className="mt-2 text-center text-xs text-muted-foreground">Tap any day to open it.</p>
     </div>
   );
