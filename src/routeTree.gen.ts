@@ -9,6 +9,8 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as IndexRouteImport } from './routes/index'
+import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as AuthenticatedGoalsRouteImport } from './routes/_authenticated/goals'
 import { Route as AuthenticatedHistoryRouteImport } from './routes/_authenticated/history'
 import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
@@ -19,30 +21,39 @@ import { Route as ApiCoachRouteImport } from './routes/api/coach'
 import { Route as AuthenticatedHabitsIndexRouteImport } from './routes/_authenticated/habits.index'
 import { Route as AuthenticatedHabitsIdRouteImport } from './routes/_authenticated/habits.$id'
 
-const AuthenticatedGoalsRoute = AuthenticatedGoalsRouteImport.update({
-  id: '/_authenticated/goals',
-  path: '/goals',
+const IndexRoute = IndexRouteImport.update({
+  id: '/',
+  path: '/',
   getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
+  id: '/_authenticated',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedGoalsRoute = AuthenticatedGoalsRouteImport.update({
+  id: '/goals',
+  path: '/goals',
+  getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedHistoryRoute = AuthenticatedHistoryRouteImport.update({
-  id: '/_authenticated/history',
+  id: '/history',
   path: '/history',
-  getParentRoute: () => rootRouteImport,
+  getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedSettingsRoute = AuthenticatedSettingsRouteImport.update({
-  id: '/_authenticated/settings',
+  id: '/settings',
   path: '/settings',
-  getParentRoute: () => rootRouteImport,
+  getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedStatsRoute = AuthenticatedStatsRouteImport.update({
-  id: '/_authenticated/stats',
+  id: '/stats',
   path: '/stats',
-  getParentRoute: () => rootRouteImport,
+  getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedTodayRoute = AuthenticatedTodayRouteImport.update({
-  id: '/_authenticated/today',
+  id: '/today',
   path: '/today',
-  getParentRoute: () => rootRouteImport,
+  getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const ApiBulkParseRoute = ApiBulkParseRouteImport.update({
   id: '/api/bulk-parse',
@@ -56,17 +67,18 @@ const ApiCoachRoute = ApiCoachRouteImport.update({
 } as any)
 const AuthenticatedHabitsIndexRoute =
   AuthenticatedHabitsIndexRouteImport.update({
-    id: '/_authenticated/habits/',
+    id: '/habits/',
     path: '/habits/',
-    getParentRoute: () => rootRouteImport,
+    getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 const AuthenticatedHabitsIdRoute = AuthenticatedHabitsIdRouteImport.update({
-  id: '/_authenticated/habits/$id',
+  id: '/habits/$id',
   path: '/habits/$id',
-  getParentRoute: () => rootRouteImport,
+  getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 
 export interface FileRoutesByFullPath {
+  '/': typeof IndexRoute
   '/goals': typeof AuthenticatedGoalsRoute
   '/history': typeof AuthenticatedHistoryRoute
   '/settings': typeof AuthenticatedSettingsRoute
@@ -78,6 +90,7 @@ export interface FileRoutesByFullPath {
   '/habits/': typeof AuthenticatedHabitsIndexRoute
 }
 export interface FileRoutesByTo {
+  '/': typeof IndexRoute
   '/goals': typeof AuthenticatedGoalsRoute
   '/history': typeof AuthenticatedHistoryRoute
   '/settings': typeof AuthenticatedSettingsRoute
@@ -90,6 +103,8 @@ export interface FileRoutesByTo {
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
+  '/': typeof IndexRoute
+  '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/_authenticated/goals': typeof AuthenticatedGoalsRoute
   '/_authenticated/history': typeof AuthenticatedHistoryRoute
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
@@ -103,6 +118,7 @@ export interface FileRoutesById {
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
+    | '/'
     | '/goals'
     | '/history'
     | '/settings'
@@ -114,6 +130,7 @@ export interface FileRouteTypes {
     | '/habits/'
   fileRoutesByTo: FileRoutesByTo
   to:
+    | '/'
     | '/goals'
     | '/history'
     | '/settings'
@@ -125,6 +142,8 @@ export interface FileRouteTypes {
     | '/habits'
   id:
     | '__root__'
+    | '/'
+    | '/_authenticated'
     | '/_authenticated/goals'
     | '/_authenticated/history'
     | '/_authenticated/settings'
@@ -137,53 +156,62 @@ export interface FileRouteTypes {
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
-  AuthenticatedGoalsRoute: typeof AuthenticatedGoalsRoute
-  AuthenticatedHistoryRoute: typeof AuthenticatedHistoryRoute
-  AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
-  AuthenticatedStatsRoute: typeof AuthenticatedStatsRoute
-  AuthenticatedTodayRoute: typeof AuthenticatedTodayRoute
+  IndexRoute: typeof IndexRoute
+  AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   ApiBulkParseRoute: typeof ApiBulkParseRoute
   ApiCoachRoute: typeof ApiCoachRoute
-  AuthenticatedHabitsIdRoute: typeof AuthenticatedHabitsIdRoute
-  AuthenticatedHabitsIndexRoute: typeof AuthenticatedHabitsIndexRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/': {
+      id: '/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated': {
+      id: '/_authenticated'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof AuthenticatedRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_authenticated/goals': {
       id: '/_authenticated/goals'
       path: '/goals'
       fullPath: '/goals'
       preLoaderRoute: typeof AuthenticatedGoalsRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/history': {
       id: '/_authenticated/history'
       path: '/history'
       fullPath: '/history'
       preLoaderRoute: typeof AuthenticatedHistoryRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/settings': {
       id: '/_authenticated/settings'
       path: '/settings'
       fullPath: '/settings'
       preLoaderRoute: typeof AuthenticatedSettingsRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/stats': {
       id: '/_authenticated/stats'
       path: '/stats'
       fullPath: '/stats'
       preLoaderRoute: typeof AuthenticatedStatsRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/today': {
       id: '/_authenticated/today'
       path: '/today'
       fullPath: '/today'
       preLoaderRoute: typeof AuthenticatedTodayRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
     }
     '/api/bulk-parse': {
       id: '/api/bulk-parse'
@@ -204,28 +232,46 @@ declare module '@tanstack/react-router' {
       path: '/habits'
       fullPath: '/habits/'
       preLoaderRoute: typeof AuthenticatedHabitsIndexRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/habits/$id': {
       id: '/_authenticated/habits/$id'
       path: '/habits/$id'
       fullPath: '/habits/$id'
       preLoaderRoute: typeof AuthenticatedHabitsIdRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
     }
   }
 }
 
-const rootRouteChildren: RootRouteChildren = {
+interface AuthenticatedRouteRouteChildren {
+  AuthenticatedGoalsRoute: typeof AuthenticatedGoalsRoute
+  AuthenticatedHistoryRoute: typeof AuthenticatedHistoryRoute
+  AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
+  AuthenticatedStatsRoute: typeof AuthenticatedStatsRoute
+  AuthenticatedTodayRoute: typeof AuthenticatedTodayRoute
+  AuthenticatedHabitsIdRoute: typeof AuthenticatedHabitsIdRoute
+  AuthenticatedHabitsIndexRoute: typeof AuthenticatedHabitsIndexRoute
+}
+
+const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedGoalsRoute: AuthenticatedGoalsRoute,
   AuthenticatedHistoryRoute: AuthenticatedHistoryRoute,
   AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
   AuthenticatedStatsRoute: AuthenticatedStatsRoute,
   AuthenticatedTodayRoute: AuthenticatedTodayRoute,
-  ApiBulkParseRoute: ApiBulkParseRoute,
-  ApiCoachRoute: ApiCoachRoute,
   AuthenticatedHabitsIdRoute: AuthenticatedHabitsIdRoute,
   AuthenticatedHabitsIndexRoute: AuthenticatedHabitsIndexRoute,
+}
+
+const AuthenticatedRouteRouteWithChildren =
+  AuthenticatedRouteRoute._addFileChildren(AuthenticatedRouteRouteChildren)
+
+const rootRouteChildren: RootRouteChildren = {
+  IndexRoute: IndexRoute,
+  AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
+  ApiBulkParseRoute: ApiBulkParseRoute,
+  ApiCoachRoute: ApiCoachRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
