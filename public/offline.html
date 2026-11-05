@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>You're offline · Habit Tracker</title>
+<meta name="theme-color" content="#e8743b" />
+<style>
+  :root { color-scheme: light dark; --bg:#fbf8f4; --fg:#2a2420; --muted:#6f655d; --primary:#e8743b; --card:#ffffff; }
+  @media (prefers-color-scheme: dark) { :root { --bg:#1c1917; --fg:#f5f0eb; --muted:#a8a29e; --card:#292524; } }
+  body { margin:0; min-height:100vh; display:grid; place-items:center; background:var(--bg); color:var(--fg); font-family: "DM Sans", system-ui, sans-serif; padding: 24px; }
+  main { max-width: 360px; text-align:center; background:var(--card); border-radius: 24px; padding: 32px 24px; box-shadow: 0 10px 30px rgba(0,0,0,.08); }
+  h1 { font-size: 1.5rem; margin: 12px 0 8px; }
+  p { color: var(--muted); line-height: 1.5; }
+  button { margin-top: 16px; font: inherit; font-weight: 600; border: 0; border-radius: 12px; padding: 12px 24px; background: var(--primary); color: #fff; cursor: pointer; min-height: 44px; }
+  button:focus-visible { outline: 3px solid var(--fg); outline-offset: 2px; }
+</style>
+</head>
+<body>
+<main>
+  <div aria-hidden="true" style="font-size:2.5rem">🌱</div>
+  <h1>You're offline</h1>
+  <p>Habit Tracker needs a connection to load your habits. Check your internet and try again.</p>
+  <button type="button" onclick="location.reload()">Retry</button>
+</main>
+</body>
+</html>
