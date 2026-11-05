@@ -12,8 +12,9 @@ import { useEffect, type ReactNode } from "react";
 
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
-import { HabitsProvider } from "@/context/HabitsContext";
-import { AppShell } from "@/components/AppShell";
+import { AuthProvider } from "@/context/AuthContext";
+import { InstallProvider } from "@/components/pwa/InstallContext";
+import { registerAppServiceWorker } from "@/components/pwa/register-sw";
 import { THEME_SCRIPT } from "@/components/ThemeToggle";
 import { Toaster } from "@/components/ui/sonner";
 
@@ -81,14 +82,16 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
   head: () => ({
     meta: [
       { charSet: "utf-8" },
-      { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Daily — Habit & Routine Tracker" },
+      { name: "viewport", content: "width=device-width, initial-scale=1, viewport-fit=cover" },
+      { title: "Daily Bloom — Habit & Routine Tracker" },
       { name: "description", content: "Track daily habits and routines, build streaks, and get coaching." },
-      { property: "og:title", content: "Daily — Habit & Routine Tracker" },
-      { property: "og:description", content: "Track daily habits and routines, build streaks, and get coaching." },
+      { name: "theme-color", content: "#ef5b36" },
+      { name: "apple-mobile-web-app-capable", content: "yes" },
+      { name: "mobile-web-app-capable", content: "yes" },
+      { name: "apple-mobile-web-app-status-bar-style", content: "default" },
+      { name: "apple-mobile-web-app-title", content: "Habits" },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
-      { name: "twitter:site", content: "@Lovable" },
     ],
     links: [
       {
@@ -96,6 +99,8 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         href: appCss,
       },
       { rel: "icon", href: "/favicon.ico", type: "image/x-icon" },
+      { rel: "manifest", href: "/manifest.webmanifest" },
+      { rel: "apple-touch-icon", href: "/icons/apple-touch-icon.png", sizes: "180x180" },
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
       {
@@ -127,16 +132,17 @@ function RootShell({ children }: { children: ReactNode }) {
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
+  useEffect(() => registerAppServiceWorker(), []);
 
   return (
     <QueryClientProvider client={queryClient}>
       {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
-      <HabitsProvider>
-        <AppShell>
+      <AuthProvider>
+        <InstallProvider>
           <Outlet />
-        </AppShell>
-        <Toaster />
-      </HabitsProvider>
+          <Toaster />
+        </InstallProvider>
+      </AuthProvider>
     </QueryClientProvider>
   );
 }
