@@ -135,10 +135,10 @@ function PasswordForm() {
     if (!cur || Object.keys(errs).length || !user?.email) return;
     setBusy(true);
     const check = await supabase.auth.signInWithPassword({ email: user.email, password: cur });
-    if (check.error) { setBusy(false); return toast.error("Your current password is incorrect."); }
+    if (check.error) { setBusy(false); toast.error("Your current password is incorrect."); return; }
     const { error } = await supabase.auth.updateUser({ password: p, current_password: cur } as { password: string });
     setBusy(false);
-    if (error) return toast.error("Couldn't change your password.", { description: error.message });
+    if (error) { toast.error("Couldn't change your password.", { description: error.message }); return; }
     setCur(""); setP(""); setC(""); setTouched(false);
     toast.success("Password changed");
   };
