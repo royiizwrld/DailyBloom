@@ -20,6 +20,9 @@ export const Route = createFileRoute("/api/bulk-parse")({
   server: {
     handlers: {
       POST: async ({ request }) => {
+        const { authenticateRequest } = await import("@/lib/request-auth.server");
+        const auth = await authenticateRequest(request);
+        if (auth instanceof Response) return auth;
         const { friendlyError, createGateway, MODEL, reasoningOptions } = await import("@/lib/ai-gateway.server");
         let text = "";
         try {

@@ -22,6 +22,9 @@ export const Route = createFileRoute("/api/coach")({
   server: {
     handlers: {
       POST: async ({ request }) => {
+        const { authenticateRequest } = await import("@/lib/request-auth.server");
+        const auth = await authenticateRequest(request);
+        if (auth instanceof Response) return auth;
         const { friendlyError, createGateway, MODEL, reasoningOptions } = await import("@/lib/ai-gateway.server");
         const apiKey = process.env['LOVABLE_API_KEY'];
         if (!apiKey) return Response.json({ error: "AI isn't configured yet." }, { status: 500 });
@@ -33,7 +36,17 @@ export const Route = createFileRoute("/api/coach")({
         }
         const messages = Array.isArray(body.messages) ? body.messages.slice(-20) : [];
         if (!messages.length) return Response.json({ error: "No message" }, { status: 400 });
-        const summary = JSON.stringify(body.summary ?? {}).slice(0, 20000);
+        // Build the summary on the server from the caller's own rows only (RLS-scoped client).
+        let summary: string;
+        try {
+          const [{ loadUserData, todayInZone }, { buildCoachSummary }] = await Promise.all([import("@/lib/cloud-data"), import("@/lib/coach-summary")]);
+          const { data: prof } = await auth.supabase.from("profiles").select("timezone").eq("id", auth.userId).maybeSingle();
+          const data = await loadUserData(auth.supabase);
+          summary = JSON.stringify(buildCoachSummary(data, todayInZone(prof?.timezone ?? "UTC"))).slice(0, 20000);
+        } catch (e) {
+          console.error("coach summary failed", e);
+          return Response.json({ error: "Couldn't load your habit history. Please try again." }, { status: 500 });
+        }
         try {
           const { provider, getRunId } = createGateway(apiKey, request.headers.get("X-Lovable-AIG-Run-ID") ?? undefined);
           const result = streamText({

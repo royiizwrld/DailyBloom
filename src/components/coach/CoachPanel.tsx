@@ -1,3 +1,4 @@
+import { authHeaders } from "@/lib/auth-fetch";
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport, type UIMessage } from "ai";
 import { Check, History, Leaf, Mic, MicOff, Plus, Trash2, X } from "lucide-react";
@@ -157,7 +158,7 @@ function ChatWindow({ id, initial, onPersist, onClear }: { id: string; initial: 
   const data = useHabits();
   const [applied, setApplied] = useState<Record<string, boolean>>({});
   const [pending, setPending] = useState<{ key: string; action: Action } | null>(null);
-  const transport = useMemo(() => new DefaultChatTransport({ api: "/api/coach" }), []);
+  const transport = useMemo(() => new DefaultChatTransport({ api: "/api/coach", headers: authHeaders }), []);
   const { messages, sendMessage, status, stop, setMessages, error } = useChat({
     id,
     messages: initial,
@@ -181,7 +182,7 @@ function ChatWindow({ id, initial, onPersist, onClear }: { id: string; initial: 
   const busy = status === "submitted" || status === "streaming";
   const send = (text: string) => {
     if (!text.trim() || busy) return;
-    sendMessage({ text }, { body: { summary: buildCoachSummary(data, data.today) } });
+    sendMessage({ text });
   };
   const routineIds = data.routines.map((r) => r.id);
 
