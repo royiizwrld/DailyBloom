@@ -12,7 +12,6 @@ import { Suggestion, Suggestions } from "@/components/ai-elements/suggestion";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { useHabits } from "@/context/HabitsContext";
-import { buildCoachSummary } from "@/lib/coach-summary";
 import { frequencyLabel } from "@/lib/habit-logic";
 import type { Frequency, Habit } from "@/types/habit";
 
