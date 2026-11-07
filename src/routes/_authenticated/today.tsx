@@ -137,11 +137,14 @@ function Today() {
         <FilterBar value={filters} onChange={setFilters} />
       </div>
 
-      {!loaded ? null : activeHabits.length === 0 ? (
+      {!loaded ? (
+        <p role="status" className="py-10 text-center text-muted-foreground">Loading your habits…</p>
+      ) : activeHabits.length === 0 ? (
         <div className="rounded-3xl border border-dashed p-10 text-center">
-          <p className="mb-4 text-muted-foreground">No habits yet. Start small — one habit is plenty.</p>
-          <div className="flex justify-center gap-2">
-            <Button onClick={() => setFormOpen(true)}><Plus /> Add a habit</Button>
+          <p className="mb-1 font-display text-lg font-semibold">Welcome! Let's plant your first habit 🌱</p>
+          <p className="mb-4 text-muted-foreground">Start small — one habit is plenty. Or paste your whole routine with bulk add.</p>
+          <div className="flex flex-wrap justify-center gap-2">
+            <Button onClick={() => setFormOpen(true)}><Plus /> Create your first habit</Button>
             <Button variant="outline" asChild><Link to="/habits">Bulk add</Link></Button>
           </div>
         </div>

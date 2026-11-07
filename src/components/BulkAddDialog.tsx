@@ -1,3 +1,4 @@
+import { authHeaders } from "@/lib/auth-fetch";
 import { useState } from "react";
 import { AlertTriangle, Loader2, Trash2 } from "lucide-react";
 import { toast } from "sonner";
@@ -46,7 +47,7 @@ export function BulkAddDialog({ open, onOpenChange }: { open: boolean; onOpenCha
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch("/api/bulk-parse", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ text }) });
+      const res = await fetch("/api/bulk-parse", { method: "POST", headers: { "Content-Type": "application/json", ...(await authHeaders()) }, body: JSON.stringify({ text }) });
       const json = await res.json().catch(() => null);
       if (!res.ok || !json || !Array.isArray(json.habits)) {
         setError(json?.error ?? "The AI response didn't look right. Please try again.");

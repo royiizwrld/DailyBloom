@@ -1,5 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import type { Database } from "@/integrations/supabase/types";
+import type { Database, Json } from "@/integrations/supabase/types";
 import type { Category, Completion, Frequency, Goal, Habit, HabitColor, HabitData, Routine } from "@/types/habit";
 import { completionKey } from "./habit-logic";
 import { DEFAULT_CATEGORIES, DEFAULT_ROUTINES } from "./seed";
@@ -15,7 +15,7 @@ export const habitToRow = (h: Habit, user_id: string) => ({
   color: h.color,
   category_id: h.categoryId,
   routine_id: h.routineId,
-  frequency: h.frequency as unknown as Database["public"]["Tables"]["habits"]["Insert"]["frequency"],
+  frequency: h.frequency as unknown as Json,
   reminder: h.reminder ?? null,
   archived: h.archived,
   created_on: h.createdAt,
