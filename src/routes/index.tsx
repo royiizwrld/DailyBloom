@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { addDays, format } from "date-fns";
+import { format } from "date-fns";
 import {
   Bot, CalendarDays, Check, CheckCircle2, ClipboardPaste, Flame, Layers, Moon, PartyPopper, RefreshCw, Repeat, ShieldCheck, Sunrise,
 } from "lucide-react";
@@ -238,5 +238,3 @@ function FinalCta() {
   );
 }
 
-// keep addDays import used for tree-shaking safety in sample generation
-void addDays;

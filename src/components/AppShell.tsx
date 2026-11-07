@@ -2,6 +2,9 @@ import { Link } from "@tanstack/react-router";
 import { BarChart3, CalendarDays, CheckCircle2, ListChecks, Target, PanelLeftClose, PanelLeftOpen, Settings } from "lucide-react";
 import { useEffect, useState, type ReactNode } from "react";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/context/AuthContext";
+import { useHabits } from "@/context/HabitsContext";
+import { Button } from "@/components/ui/button";
 import { CoachPanel } from "./coach/CoachPanel";
 
 const NAV = [
@@ -18,6 +21,9 @@ const COLLAPSE_KEY = "habit-tracker:sidebar-collapsed";
 export function AppShell({ children }: { children: ReactNode }) {
   const [collapsed, setCollapsed] = useState(false);
   useEffect(() => setCollapsed(localStorage.getItem(COLLAPSE_KEY) === "1"), []);
+  const { profile } = useAuth();
+  const { loadError, reload } = useHabits();
+  const first = profile?.first_name;
   const toggle = () => setCollapsed((c) => { localStorage.setItem(COLLAPSE_KEY, c ? "0" : "1"); return !c; });
   return (
     <div className="min-h-screen bg-background md:flex">
@@ -31,6 +37,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             </span>
           )}
         </div>
+        {!collapsed && first && <p className="-mt-5 mb-6 truncate text-sm text-muted-foreground">Hi, {first} 👋</p>}
         <nav className="flex flex-col gap-1">
           {NAV.map(({ to, label, icon: Icon }) => (
             <Link
@@ -58,11 +65,24 @@ export function AppShell({ children }: { children: ReactNode }) {
         <span className="font-display text-lg font-bold">
           Daily <span className="text-primary">Bloom</span>
         </span>
+        {first && <span className="truncate text-sm text-muted-foreground">Hi, {first}</span>}
       </header>
 
-      <main className="mx-auto w-full max-w-3xl flex-1 px-4 pb-28 pt-5 md:px-8 md:pb-12 md:pt-10">{children}</main>
+      <main className="mx-auto w-full max-w-3xl flex-1 px-4 pb-28 pt-5 md:px-8 md:pb-12 md:pt-10">
+        {loadError && (
+          <div role="alert" className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-destructive/40 bg-card p-4 text-sm">
+            <span>{typeof navigator !== "undefined" && !navigator.onLine ? "You're offline, so your habits couldn't load." : "Your habits couldn't load."}</span>
+            <Button size="sm" onClick={reload}>Retry</Button>
+          </div>
+        )}
+        {children}
+        <footer className="mt-12 flex flex-wrap gap-4 border-t pt-4 text-xs text-muted-foreground">
+          <Link to="/terms" className="hover:text-foreground">Terms</Link>
+          <Link to="/privacy" className="hover:text-foreground">Privacy</Link>
+        </footer>
+      </main>
 
-      <nav className="fixed inset-x-0 bottom-0 z-30 grid grid-cols-6 border-t bg-card/95 backdrop-blur md:hidden">
+      <nav className="fixed inset-x-0 bottom-0 z-30 grid grid-cols-6 border-t bg-card/95 backdrop-blur [padding-bottom:env(safe-area-inset-bottom)] md:hidden">
         {NAV.map(({ to, label, icon: Icon }) => (
           <Link
             key={to}
