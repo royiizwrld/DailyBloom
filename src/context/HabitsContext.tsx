@@ -129,20 +129,20 @@ export function HabitsProvider({ children }: { children: ReactNode }) {
       addHabit: (h) => {
         const nh = make(h);
         setData((d) => ({ ...d, habits: [...d.habits, nh] }));
-        persist("your habit", () => supabase.from("habits").upsert(habitToRow(nh, u)));
+        persist("your habit", [{ kind: "upsert", table: "habits", rows: habitToRow(nh, u) }]);
         return nh;
       },
       addHabits: (hs) => {
         const list = hs.map(make);
         setData((d) => ({ ...d, habits: [...d.habits, ...list] }));
-        persist("your habits", () => supabase.from("habits").upsert(list.map((h) => habitToRow(h, u))));
+        persist("your habits", [{ kind: "upsert", table: "habits", rows: list.map((h) => habitToRow(h, u)) }]);
       },
       updateHabit: (id, patch) => {
         const cur = dataRef.current.habits.find((h) => h.id === id);
         if (!cur) return;
         const next = { ...cur, ...patch };
         setData((d) => ({ ...d, habits: d.habits.map((h) => (h.id === id ? next : h)) }));
-        persist("your change", () => supabase.from("habits").upsert(habitToRow(next, u)));
+        persist("your change", [{ kind: "upsert", table: "habits", rows: habitToRow(next, u) }]);
       },
       deleteHabit: (id) => {
         setData((d) => ({
@@ -151,13 +151,11 @@ export function HabitsProvider({ children }: { children: ReactNode }) {
           goals: d.goals.filter((g) => g.habitId !== id),
           completions: Object.fromEntries(Object.entries(d.completions).filter(([, c]) => c.habitId !== id)),
         }));
-        persist("the deletion", async () => {
-          const a = await supabase.from("completions").delete().eq("habit_id", id);
-          if (a.error) return a;
-          const b = await supabase.from("goals").delete().eq("habit_id", id);
-          if (b.error) return b;
-          return supabase.from("habits").delete().eq("id", id);
-        });
+        persist("the deletion", [
+          { kind: "delete", table: "completions", match: { habit_id: id } },
+          { kind: "delete", table: "goals", match: { habit_id: id } },
+          { kind: "delete", table: "habits", match: { id } },
+        ]);
       },
       toggle: (habitId, date) => {
         const k = completionKey(habitId, date);
@@ -168,11 +166,11 @@ export function HabitsProvider({ children }: { children: ReactNode }) {
           else completions[k] = { habitId, date };
           return { ...d, completions };
         });
-        persist("your check-in", () =>
+        persist("your check-in", [
           exists
-            ? supabase.from("completions").delete().eq("habit_id", habitId).eq("day", date)
-            : supabase.from("completions").upsert({ user_id: u, habit_id: habitId, day: date }),
-        );
+            ? { kind: "delete", table: "completions", match: { habit_id: habitId, day: date } }
+            : { kind: "upsert", table: "completions", rows: { user_id: u, habit_id: habitId, day: date } },
+        ]);
       },
       setNote: (habitId, date, note) => {
         const clean = note.trim() || undefined;
@@ -181,12 +179,12 @@ export function HabitsProvider({ children }: { children: ReactNode }) {
           const existing = d.completions[k] ?? { habitId, date };
           return { ...d, completions: { ...d.completions, [k]: { ...existing, note: clean } } };
         });
-        persist("your note", () => supabase.from("completions").upsert({ user_id: u, habit_id: habitId, day: date, note: clean ?? null }));
+        persist("your note", [{ kind: "upsert", table: "completions", rows: { user_id: u, habit_id: habitId, day: date, note: clean ?? null } }]);
       },
       addCategory: (name) => {
         const c = { id: uid(), name: name.trim() };
         setData((d) => ({ ...d, categories: [...d.categories, c] }));
-        persist("the category", () => supabase.from("categories").upsert({ user_id: u, id: c.id, name: c.name }));
+        persist("the category", [{ kind: "upsert", table: "categories", rows: { user_id: u, id: c.id, name: c.name } }]);
         return c;
       },
       deleteCategory: (id) => {
@@ -195,16 +193,15 @@ export function HabitsProvider({ children }: { children: ReactNode }) {
           categories: d.categories.filter((c) => c.id !== id),
           habits: d.habits.map((h) => (h.categoryId === id ? { ...h, categoryId: "other" } : h)),
         }));
-        persist("the category change", async () => {
-          const a = await supabase.from("habits").update({ category_id: "other" }).eq("category_id", id);
-          if (a.error) return a;
-          return supabase.from("categories").delete().eq("id", id);
-        });
+        persist("the category change", [
+          { kind: "update", table: "habits", values: { category_id: "other" }, match: { category_id: id } },
+          { kind: "delete", table: "categories", match: { id } },
+        ]);
       },
       addRoutine: (name) => {
         const r = { id: uid(), name: name.trim(), order: data.routines.length };
         setData((d) => ({ ...d, routines: [...d.routines, r] }));
-        persist("the routine", () => supabase.from("routines").upsert({ user_id: u, id: r.id, name: r.name, sort_order: r.order }));
+        persist("the routine", [{ kind: "upsert", table: "routines", rows: { user_id: u, id: r.id, name: r.name, sort_order: r.order } }]);
         return r;
       },
       deleteRoutine: (id) => {
@@ -213,26 +210,25 @@ export function HabitsProvider({ children }: { children: ReactNode }) {
           routines: d.routines.filter((r) => r.id !== id),
           habits: d.habits.map((h) => (h.routineId === id ? { ...h, routineId: null } : h)),
         }));
-        persist("the routine change", async () => {
-          const a = await supabase.from("habits").update({ routine_id: null }).eq("routine_id", id);
-          if (a.error) return a;
-          return supabase.from("routines").delete().eq("id", id);
-        });
+        persist("the routine change", [
+          { kind: "update", table: "habits", values: { routine_id: null }, match: { routine_id: id } },
+          { kind: "delete", table: "routines", match: { id } },
+        ]);
       },
       markCelebrated: (date) => {
         if (dataRef.current.celebrated.includes(date)) return;
         setData((d) => ({ ...d, celebrated: [...d.celebrated, date] }));
-        persist("today's celebration", () => supabase.from("celebrations").upsert({ user_id: u, day: date }));
+        persist("today's celebration", [{ kind: "upsert", table: "celebrations", rows: { user_id: u, day: date } }]);
       },
       clearSample: () => undefined,
       addGoal: (g) => {
         const ng = { ...g, id: uid() };
         setData((d) => ({ ...d, goals: [...d.goals, ng] }));
-        persist("your goal", () => supabase.from("goals").upsert(goalToRow(ng, u)));
+        persist("your goal", [{ kind: "upsert", table: "goals", rows: goalToRow(ng, u) }]);
       },
       deleteGoal: (id) => {
         setData((d) => ({ ...d, goals: d.goals.filter((g) => g.id !== id) }));
-        persist("the goal deletion", () => supabase.from("goals").delete().eq("id", id));
+        persist("the goal deletion", [{ kind: "delete", table: "goals", match: { id } }]);
       },
       statsFor: (h) => habitStats(h, data.completions, today),
       categoryName: (id) => data.categories.find((c) => c.id === id)?.name ?? "Other",
