@@ -22,7 +22,15 @@ export function AppShell({ children }: { children: ReactNode }) {
   const [collapsed, setCollapsed] = useState(false);
   useEffect(() => setCollapsed(localStorage.getItem(COLLAPSE_KEY) === "1"), []);
   const { profile } = useAuth();
-  const { loadError, reload } = useHabits();
+  const { loadError, reload, pendingSync, syncNow } = useHabits();
+  const [online, setOnline] = useState(true);
+  useEffect(() => {
+    const u = () => setOnline(navigator.onLine);
+    u();
+    window.addEventListener("online", u);
+    window.addEventListener("offline", u);
+    return () => { window.removeEventListener("online", u); window.removeEventListener("offline", u); };
+  }, []);
   const first = profile?.first_name;
   const toggle = () => setCollapsed((c) => { localStorage.setItem(COLLAPSE_KEY, c ? "0" : "1"); return !c; });
   return (
@@ -73,6 +81,15 @@ export function AppShell({ children }: { children: ReactNode }) {
           <div role="alert" className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-destructive/40 bg-card p-4 text-sm">
             <span>{typeof navigator !== "undefined" && !navigator.onLine ? "You're offline, so your habits couldn't load." : "Your habits couldn't load."}</span>
             <Button size="sm" onClick={reload}>Retry</Button>
+          </div>
+        )}
+        {(!online || pendingSync > 0) && (
+          <div role="status" className="mb-4 flex items-center justify-between gap-3 rounded-2xl border bg-card px-4 py-2 text-sm text-muted-foreground">
+            <span>
+              {online ? "Syncing" : "Offline"}
+              {pendingSync > 0 ? ` · ${pendingSync} change${pendingSync > 1 ? "s" : ""} waiting to sync` : " · changes will save on this device"}
+            </span>
+            {online && pendingSync > 0 && <Button size="sm" variant="outline" onClick={syncNow}>Sync now</Button>}
           </div>
         )}
         {children}

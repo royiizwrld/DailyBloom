@@ -6,6 +6,7 @@ import { emptyData } from "@/lib/seed";
 import { supabase } from "@/integrations/supabase/client";
 import { goalToRow, habitToRow, importData, loadUserData, todayInZone } from "@/lib/cloud-data";
 import { useAuth } from "./AuthContext";
+import { enqueue, flushQueue, readCache, readQueue, writeCache, type SyncOp } from "@/lib/sync-queue";
 
 /** Legacy key from the local-only version; read once for the import prompt. */
 export const LEGACY_STORAGE_KEY = "habit-tracker:v1";
@@ -15,6 +16,8 @@ const uid = () => crypto.randomUUID().slice(0, 12);
 interface Ctx extends HabitData {
   loaded: boolean;
   loadError: string | null;
+  pendingSync: number;
+  syncNow: () => void;
   reload: () => void;
   today: Date;
   activeHabits: Habit[];
@@ -80,37 +83,65 @@ export function HabitsProvider({ children }: { children: ReactNode }) {
     if (!userId) return;
     let cancelled = false;
     setLoadError(null);
-    loadUserData(supabase)
+    const cached = readCache(userId);
+    if (cached) { setData(cached); setLoaded(true); }
+    flushQueue(supabase, userId).catch(() => null).then(() => loadUserData(supabase))
       .then((d) => {
+        if (cancelled) return;
+        if (readQueue(userId).length) return; // unsynced local edits win until they sync
         if (cancelled) return;
         setData(d);
         setLoaded(true);
         const legacy = readLegacy();
         if (legacy && localStorage.getItem(`habit-tracker:import-skipped:${userId}`) !== "1") setPendingImport(legacy);
       })
-      .catch((e: Error) => !cancelled && setLoadError(e.message || "Couldn't load your habits."));
+      .catch((e: Error) => !cancelled && !cached && setLoadError(e.message || "Couldn't load your habits."));
     return () => { cancelled = true; };
   }, [userId, nonce]);
 
   const reload = useCallback(() => setNonce((n) => n + 1), []);
 
-  /** Run a DB write; on failure tell the user and offer retry. Optimistic state is already applied. */
-  const persist = useCallback((label: string, op: () => PromiseLike<{ error: { message: string } | null }>) => {
-    const run = async () => {
-      try {
-        const { error } = await op();
-        if (error) throw new Error(error.message);
-      } catch (e) {
-        const offline = typeof navigator !== "undefined" && !navigator.onLine;
-        toast.error(offline ? `You're offline — couldn't save ${label}.` : `Couldn't save ${label}.`, {
-          description: offline ? "Reconnect and tap Retry." : (e as Error).message,
-          action: { label: "Retry", onClick: () => void run() },
-          duration: 10000,
-        });
-      }
-    };
-    void run();
-  }, []);
+  const [pending, setPending] = useState(0);
+  const flushing = useRef(false);
+
+  const flush = useCallback(async () => {
+    if (!userId || flushing.current || (typeof navigator !== "undefined" && !navigator.onLine)) return;
+    if (!readQueue(userId).length) return;
+    flushing.current = true;
+    try {
+      const r = await flushQueue(supabase, userId);
+      setPending(r.remaining);
+      if (r.synced) toast.success(`Synced ${r.synced} offline change${r.synced > 1 ? "s" : ""}.`);
+      if (r.dropped.length) toast.error(`Couldn't sync ${r.dropped.join(", ")}.`);
+    } finally {
+      flushing.current = false;
+    }
+  }, [userId]);
+
+  /** Save via the outbox: write now if possible; on network failure keep it queued and sync later. */
+  const persist = useCallback((label: string, ops: SyncOp[]) => {
+    if (!userId) return;
+    enqueue(userId, { id: uid(), label, ops, attempts: 0 });
+    setPending(readQueue(userId).length);
+    if (typeof navigator !== "undefined" && !navigator.onLine) {
+      toast(`Saved offline — will sync when you're back online.`, { id: "offline-save" });
+      return;
+    }
+    void flush();
+  }, [userId, flush]);
+
+  useEffect(() => {
+    if (!userId) return;
+    setPending(readQueue(userId).length);
+    const on = () => void flush();
+    const vis = () => document.visibilityState === "visible" && void flush();
+    window.addEventListener("online", on);
+    document.addEventListener("visibilitychange", vis);
+    const t = setInterval(on, 30_000);
+    return () => { window.removeEventListener("online", on); document.removeEventListener("visibilitychange", vis); clearInterval(t); };
+  }, [userId, flush]);
+
+  useEffect(() => { if (userId && loaded) writeCache(userId, data); }, [userId, loaded, data]);
 
   const todayKey = today.getTime();
 
@@ -122,6 +153,8 @@ export function HabitsProvider({ children }: { children: ReactNode }) {
       ...data,
       loaded,
       loadError,
+      pendingSync: pending,
+      syncNow: () => void flush(),
       reload,
       today,
       activeHabits: data.habits.filter((h) => !h.archived),
@@ -247,7 +280,7 @@ export function HabitsProvider({ children }: { children: ReactNode }) {
       },
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [data, loaded, loadError, todayKey, userId, tz, pendingImport, persist, reload]);
+  }, [data, loaded, loadError, todayKey, userId, tz, pendingImport, persist, reload, pending, flush]);
 
   return <HabitsContext.Provider value={value}>{children}</HabitsContext.Provider>;
 }
