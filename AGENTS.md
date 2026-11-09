@@ -17,3 +17,4 @@
 - Service worker is registered only by `src/components/pwa/register-sw.ts` (production, non-preview hosts); it caches static assets only and serves `public/offline.html` for failed navigations.
 - AI calls (coach chat, bulk add) run in server routes under `src/routes/api/` through the Lovable AI Gateway so the key never reaches the browser.
 - Coach markdown excludes the Mermaid plugin; unused diagram dependencies must not enter the startup graph because a graph-layout initialization error prevents all controls from hydrating.
+- Writes go through the persisted outbox in `src/lib/sync-queue.ts` (serializable ops, replayed in order on reconnect/focus) and the last snapshot is cached per user in localStorage, so the app works offline and syncs later.
